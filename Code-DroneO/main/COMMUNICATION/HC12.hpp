@@ -10,7 +10,7 @@ void returnMessage(SoftwareSerial &HC12object, int returnMessageNumber);
 /*
 void treuilUnroll(int speed);
 void treuilRoll(int speed);
-void verinIn(void);
-void verinOut(void);
+void valveIn(void);
+void valveOut(void);
 */
 #endif
