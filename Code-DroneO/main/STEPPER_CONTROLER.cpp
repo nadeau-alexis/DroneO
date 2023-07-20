@@ -28,7 +28,7 @@ void homing(int* positionPointer_, int dirPin_, int stepPin_, int stepHomeSwitch
        }
        else
        {
-            digitalWrite(stepperEnable_,HIGH);
+            digitalWrite(stepperEnable_, HIGH);
             Serial.println("arret d'urgence");
             stop_loop=true;
             return;
@@ -54,7 +54,7 @@ void homing(int* positionPointer_, int dirPin_, int stepPin_, int stepHomeSwitch
         }
         else
        {
-            digitalWrite(stepperEnable_,HIGH);
+            digitalWrite(stepperEnable_, HIGH);
             stop_loop=true;
             Serial.println("arret d'urgence");
             return;
