@@ -149,7 +149,7 @@ void treuilUnrollManual(int n, int speed, int limitswitch, int irsensor ,Softwar
 
 
 
-void verinIn(SoftwareSerial &HC12object, String HC12String_)
+void valveIn(SoftwareSerial &HC12object, String HC12String_)
 {
   digitalWrite(8, LOW);
   digitalWrite(7, HIGH);      // Set the rotation of motor
@@ -176,7 +176,7 @@ void verinIn(SoftwareSerial &HC12object, String HC12String_)
   digitalWrite(6, LOW);       // DISABLE
 }
 
-void verinOut(SoftwareSerial &HC12object, String HC12String_)
+void valveOut(SoftwareSerial &HC12object, String HC12String_)
 {
   digitalWrite(7, LOW);
   digitalWrite(8, HIGH);      // Set the rotation of motor
