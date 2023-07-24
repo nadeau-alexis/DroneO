@@ -8,7 +8,7 @@
 #include <PID_v1.h>
 
 // ------- INTERNAL LIBRAIRIES ------- 
-#include "BDC_CONTROLER.hpp"
+#include "BDC_CONTROLLER.hpp"
 #include "STEPPER_CONTROLER.hpp"
 #include "PUMP_CONTROLER.hpp"
 #include "variables.hpp"
