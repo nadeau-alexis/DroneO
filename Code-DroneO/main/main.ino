@@ -9,7 +9,7 @@
 
 // ------- INTERNAL LIBRAIRIES ------- 
 #include "BDC_CONTROLLER.hpp"
-#include "STEPPER_CONTROLER.hpp"
+#include "STEPPER_CONTROLLER.hpp"
 #include "PUMP_CONTROLLER.hpp"
 #include "variables.hpp"
 #include "HC12.hpp"
