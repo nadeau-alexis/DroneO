@@ -1,47 +1,47 @@
-// ---------- Main.ino ----------
+// ------- Main.ino -------
 
+
+// ------- EXTERNAL LIBRAIRIES -------
 #include <Arduino.h>
 #include <SoftwareSerial.h>
+#include <Encoder.h>
+#include <PID_v1.h>
 
+// ------- INTERNAL LIBRAIRIES ------- 
 #include "BDC_CONTROLER.hpp"
 #include "STEPPER_CONTROLER.hpp"
 #include "PUMP_CONTROLER.hpp"
 #include "variables.hpp"
 #include "HC12.hpp"
 #include "string.h"
-#include "VERIN_PURGE.hpp"
+#include "VALVE_PURGE.hpp"
 
 
-// ---------- CONSTANTS ----------
-const int PWMPompe = 1;
+// ------- CONSTANTS -------
+const int phTreuilPin   = 4;  // EN_TREUIL (pwm)
+const int enTreuilPin   = 5;  // PH_TREUIL (direction)
+const int flowPin       = 7;  // SIG_FL_SENSOR
+const int stepperEnable = 8;  // STP_EN
+const int stepPin       = 9;  // STP_STEP
+const int dirPin        = 10; // STP_DIR
+const int pumpPin       = 13; // PWM_POMPE
+const int ResetPin      = 15;
+const int svBoutPin     = 16; // SV_BOUT
+const int svPurgePin    = 17; // SV_PURG
+const int lsPlateauPin  = 20; // SIG_LS_PLATEAU
+const int lsTreuilPin   = 21; // SIG_LS_TREUIL
 
-const int CSTreuil = 4;  // CSelect Treuil
-const int ENTreuil = 27;  // Enable Treuil
-const int PHTreuil = 26;  // Enable Treuil
-const int ENCFBA = 25;  //encodeur du Treuil FB_A
-const int ENCFBB = 24;  //encodeur du Treuil FB_B
+const int boutonManuel  = 18;
+const int irsensor = 1; // TO DO : remove when irsensor is no longer needed for treuil manual roll and unroll 
 
-const int SIGLSTreuil = 7;  //anciennement SwitchTreuilFinE
+// ------- COMMAND NAMES -------
+// TO DO : Give each command we want to check for a verbose name 
+// and associate it with the number it previously had to add clarity to the code 
+// Here is an example, name and associated number might need to be changed
+//const int PUMP_COMMAND = 30;
 
 
-const int STPFault = 5;  // Fault Plateau
-const int SIGLSPlateau = 6;  //anciennement stepHomeSwitch
-const int STPEn = 30; //anciennement stepperEnable 
-const int STPStep = 31; //anciennement stepPin
-const int STPDir = 32; //anciennement dirPin
-const int JOGPlateau = 16; //anciennement boutonManuel
-
-const int SVPurg = 19; //ouverture valve pour purge
-const int SVBout = 18; //ouverture valve pour remplissage bouteille
-
-const int SIGFlSensor = 29; //mesure du débit
-
-const int HC12RXD = 34;
-const int HC12TXD = 33;
-
-const int RESET = 17; //anciennementResetPin
-
-// ---------- VARIABLES ----------
+// ------- VARIABLES -------
 int position = 0;
 int askedCommand = 0;
 bool modeNormal = false;
@@ -49,11 +49,25 @@ String HC12String;
 int D = 0;
 int N = 1;
 
-// ----------- OBJETS ------------
-SoftwareSerial HC12(HC12TXD, HC12RXD); // HC-12 TX Pin, HC-12 RX Pin
+float target_nbTurns = 5; // Variable used to store a target number of winch turns to be used with PID
+float pulseByTurn = 2398.31; // Number of pulses by turn of the winch (treuil)
+float freq = 0; // Flow meter frequence variable
+float flow = 0; // Flow meter flow rate variable
+
+long positionEncTreuil  = -999; // Gives a value to encoder variable
+
+double Setpoint, Input, Output; // PID variables
+double Kp=0.5, Ki=0.1, Kd=0; // Put Kd at 0.1 if we want to slow down and arrive smoothly at target
+
+volatile int flowCount = 0; // Volatile variables are better suited for use with interrupts
+
+// ------- OBJECTS -------
+SoftwareSerial HC12(11, 12); // HC-12 TX Pin, HC-12 RX Pin
+Encoder encTreuil(3, 2); //encA / encB
+PID myPID(&Input, &Output, &Setpoint, Kp, Ki, Kd, DIRECT);
 
 
-// --------- PROTOTYPES -----------
+// ------- PROTOTYPES -------
 
 void commandeRemplissageManuel(int wantedBottle, int duree);
 void remplissage (int wantedBottle, int duree);
@@ -68,67 +82,62 @@ void setup()
   delay(200); 
   // ---------- pin initialisation ----------
   // --- Motors ---
-  // Motor TREUIL control pin initiate
+  // Motor_1 TREUIL control pin initiate
+  pinMode(phTreuilPin, OUTPUT);     
+  pinMode(enTreuilPin, OUTPUT);    
+  pinMode(9, OUTPUT); // Speed control
   
-  pinMode(ENTreuil, OUTPUT); //    
-  pinMode(CSTreuil, OUTPUT); //   
-  pinMode(PHTreuil, OUTPUT); //
+  // Motor_2 VALVE control pin initiate
+  pinMode(7, OUTPUT);     
+  pinMode(8, OUTPUT);    
+  pinMode(10, OUTPUT);  // Speed control
+
+  // VALVE pin initiate
+  pinMode(svBoutPin, OUTPUT);
+  pinMode(svPurgePin, OUTPUT);   
   
-  pinMode(ENCFBA, INPUT_PULLUP); //
-  pinMode(ENCFBB, INPUT_PULLUP); //
-  pinMode(SIGLSTreuil, INPUT_PULLUP);
+  //Disable the Motor Shield output
+  pinMode(6, OUTPUT); 
+  digitalWrite(6, LOW); 
 
-  digitalWrite(ENTreuil, LOW); //Disable treuil motor control (HIGH ou LOW à valider)
+  // STEPPER BOTTLES control pin initiale
+  pinMode(stepPin, OUTPUT); // STEP PIN
+  pinMode(dirPin, OUTPUT); // DIR PIN
+  pinMode(stepperEnable, OUTPUT);
+  digitalWrite(stepperEnable,HIGH);//Disable stepper motor control
+  //pinMode(stepHomeSwitch, INPUT_PULLUP);
 
-
- // Motor Stepper Plateau control pin initiale
-  
-  pinMode(STPStep, OUTPUT); // STEP PIN
-  pinMode(STPDir, OUTPUT); // DIR PIN
-  pinMode(STPEn, OUTPUT);
-  pinMode(SIGLSPlateau, INPUT_PULLUP);
-  
-  digitalWrite(STPEn, HIGH);// Disable stepper motor control (HIGH ou LOW à valider)
-   
-    // Valve control pin initiate
-  
-  pinMode(SVPurg, OUTPUT);     
-  pinMode(SVBout, OUTPUT);    
-
-  // Lecture débitmètre pin initiate
-  pinMode(SIGFlSensor, INPUT_PULLUP);     
-
-  // PUMP 1 AND PUMP 2 control pin initiate
-  pinMode(PWMPompe, OUTPUT);
-  
-
-  // SWITCH
+  // PUMP control pin initiate
+  pinMode(pumpPin, OUTPUT);
  
-  pinMode(JOGPlateau, INPUT_PULLUP); 
+  // --- LED ---
+  pinMode(LED_BUILTIN, OUTPUT);
+
+  // SWITCHES
+  pinMode(lsPlateauPin, INPUT_PULLUP); // SIG_LS_PLATEAU
+  pinMode(lsTreuilPin, INPUT_PULLUP);  // SIG_LS_TREUIL
+  pinMode(boutonManuel, INPUT_PULLUP); 
 
   // PREPARING MACHINE
-
-  //pump2off(pump2Pin);
-  //pump1off(pump1Pin);
-  //verinIn(HC12, HC12String);
-  //delay(500);
-  //verinpurgeIn(verinOutPin, verinInPin);
-  //delay(4000);
+  pumpOff(pumpPin);
+  valveIn(HC12, HC12String);
+  delay(500);
+  valvePurgeIn(svPurgePin, svBoutPin);
+  delay(4000);
 
   Serial.println("INITIALISATION");
-  digitalWrite(stepperEnable,LOW);//Enable stepper motor control
+  digitalWrite(stepperEnable,LOW); //Enable stepper motor control
   delay(1);
-  homing(&position, dirPin, stepPin, stepHomeSwitch, stepperEnable, HC12, HC12String);
- 
+  homing(&position, dirPin, stepPin, lsPlateauPin, stepperEnable, HC12, HC12String);
  
 }
 
-void loop() {
+void loop() 
+{
  askedCommand = checkCommunication(HC12, HC12String);
           delay(1);
           if(askedCommand==70)
           {
-            
             Serial.println(askedCommand);
             returnMessage(HC12, 1);
             Resetfct();
@@ -150,13 +159,13 @@ void loop() {
         
         else if(askedCommand==8)
           {
-            treuilUnroll(1,SwitchTreuilFinD, HC12, HC12String);
+            treuilUnroll(1,lsTreuilPin, HC12, HC12String);
             returnMessage(HC12, 1);
           }
         
           else if(askedCommand==9)
           {
-            treuilRoll(1,SwitchTreuilFinE, HC12, HC12String);
+            treuilRoll(1,lsTreuilPin, HC12, HC12String);
             Serial.println(stop_loop);
             returnMessage(HC12, 1);
           }
@@ -186,7 +195,7 @@ void loop() {
             fin=millis();
             Serial.println(N);
             Serial.println(fin-debut);
-            treuilUnrollManual(N, 1,SwitchTreuilFinD, irsensor, HC12, HC12String);
+            treuilUnrollManual(N, 1,lsTreuilPin, irsensor, HC12, HC12String);
             returnMessage(HC12, 1);
           }
         
@@ -205,7 +214,7 @@ void loop() {
             fin=millis();
             Serial.println(N);
             Serial.println(fin-debut);
-            treuilRollManual(N, 1, SwitchTreuilFinE, irsensor, HC12, HC12String);
+            treuilRollManual(N, 1, lsTreuilPin, irsensor, HC12, HC12String);
             returnMessage(HC12, 1);
           }
           else if(askedCommand>=21&& askedCommand<=26)
@@ -220,7 +229,7 @@ void loop() {
           else if(askedCommand>=51&& askedCommand<=56)
           {
             Serial.println(askedCommand);
-            tournerplateau(askedCommand-50);
+            tournerPlateau(askedCommand-50);
             returnMessage(HC12, 1);
           }
         else if(askedCommand==30)
@@ -229,21 +238,21 @@ void loop() {
             delay(2000);
             D = checkCommunication(HC12, HC12String);
             Serial.println(D);
-            Pompage(D);
+            pompage(D);
             returnMessage(HC12, 1);
             D = 0;
           }
           else if(askedCommand==40)
           {
             Serial.println(askedCommand);
-            tournerplateaupurge();
+            tournerPlateauPurge();
             returnMessage(HC12, 1);
           }
           else if(askedCommand==60)
           {
             Serial.println(askedCommand);
             digitalWrite(stepperEnable,LOW);//Enable stepper motor control
-            verinpurge();
+            valvePurge();
             returnMessage(HC12, 1);
           }
          else if(askedCommand==70)
@@ -256,7 +265,7 @@ void loop() {
           {
             Serial.println(askedCommand);
             returnMessage(HC12, 1);
-            verinpurgesanspompage();
+            valvePurgeSansPompage();
           }
          else if(digitalRead(boutonManuel) == 0)
           {
@@ -274,21 +283,20 @@ void loop() {
 
 // ----------- FONCTION--------------
 
-void Pompage(int duree)
- {
-  int debut1, debut2;
-  int fin1, fin2;
-  int d1=0;
-  int d2=0;
-    pump1on(pump1Pin);
+void pompage(int duree)
+{
+  int debut;
+  int fin;
+  int d=0;
+    pumpOn(pumpPin);
     debut1=millis();
     for (int i=0; i<5;i++)
     {
       d1=checkCommunication(HC12, HC12String);
-      Serial.println(d1);
-      if(d1==100)
+      Serial.println(d);
+      if(d==100)
       {
-        pump1off(pump1Pin);
+        pumpOff(pumpPin);
         Serial.println("arret d'urgence");
         stop_loop=true;
         return;
@@ -299,52 +307,29 @@ void Pompage(int duree)
       }
     }
     fin1=millis();
-    Serial.println(fin1-debut1);
-    pump2on(pump2Pin);
-    debut2=millis();
+    Serial.println(fin-debut);
 
-    for (int i=0; i<duree;i++)
-    {
-      d2=checkCommunication(HC12, HC12String);
-      Serial.println(d2);
-      if(d2==100)
-      {
-        pump2off(pump2Pin);
-        pump1off(pump1Pin);
-        stop_loop=true;
-        Serial.println("arret d'urgence");
-        return;
-        
-      }
-      else
-      {delay(1000);}
-    }
-    pump2off(pump2Pin);
-    pump1off(pump1Pin);
-    fin2=millis();
-    Serial.println(fin1-debut1+fin2-debut2);
-
- }
+}
  
 void remplissage (int wantedBottle, int duree)
 {
   digitalWrite(stepperEnable,LOW);//Enable stepper motor control
   delay(1);
   //PURGE
-  //verinpurge();
-  Serial.println(positionplateau);
+  //valvePurge();
+  Serial.println(positionPlateau);
 
   // REMPLISSAGE
-  //homing(&position, dirPin, stepPin, stepHomeSwitch,stepperEnable, HC12, HC12String);
+  //homing(&position, dirPin, stepPin, lsPlateauPin,stepperEnable, HC12, HC12String);
   if(stop_loop==true){return;}
   delay(50);
   takePosition(&position, wantedBottle, dirPin, stepPin, stepperEnable, HC12, HC12String);
   if(stop_loop==true){return;}
-  verinOut(HC12, HC12String);
+  valveOut(HC12, HC12String);
   if(stop_loop==true){return;}
-  Pompage(duree);
+  pompage(duree);
   if(stop_loop==true){return;}
-  verinIn(HC12, HC12String);
+  valveIn(HC12, HC12String);
 
   digitalWrite(stepperEnable,HIGH);//Disable stepper motor control
 }
@@ -352,47 +337,49 @@ void remplissage (int wantedBottle, int duree)
 
 void commandeRemplissageManuel(int wantedBottle, int duree)
 {
-  treuilUnroll(1,SwitchTreuilFinD,HC12, HC12String);
+  treuilUnroll(1,lsTreuilPin,HC12, HC12String);
   if(stop_loop==true){return;}
   digitalWrite(stepperEnable,LOW);//Enable stepper motor control
   delay(1);
- // homing(&position, dirPin, stepPin, stepHomeSwitch, stepperEnable,  HC12, HC12String);
+ // homing(&position, dirPin, stepPin, lsPlateauPin, stepperEnable,  HC12, HC12String);
   if(stop_loop==true){return;}
   delay(50);
 
   //PURGE
 
-  verinpurge();
-  Serial.println(positionplateau);
+  valvePurge();
+  Serial.println(positionPlateau);
 
   // REMPLISSAGE
   takePosition(&position, wantedBottle, dirPin, stepPin, stepperEnable, HC12, HC12String);
-  Serial.println(positionplateau);
+  Serial.println(positionPlateau);
 
   if(stop_loop==true){return;}
-  verinOut(HC12, HC12String);
+  valveOut(HC12, HC12String);
   if(stop_loop==true){return;}
-  Pompage(duree);
+  pompage(duree);
   if(stop_loop==true){return;}
-  verinIn(HC12, HC12String);
+  valveIn(HC12, HC12String);
   if(stop_loop==true){return;}
   digitalWrite(stepperEnable,HIGH);//Disable stepper motor control
-  treuilRoll(1,SwitchTreuilFinE, HC12, HC12String);
+  treuilRoll(1,lsTreuilPin, HC12, HC12String);
 }
 
-void tournerplateau(int wantedBottle)
+void tournerPlateau(int wantedBottle)
 {
   digitalWrite(stepperEnable,LOW);//Enable stepper motor control
   delay(1);
-  //homing(&position, dirPin, stepPin, stepHomeSwitch, stepperEnable, HC12, HC12String);
+  //homing(&position, dirPin, stepPin, lsPlateauPin, stepperEnable, HC12, HC12String);
   Serial.println(position);
   if(stop_loop==true){return;}
   delay(50);
   takePosition(&position, wantedBottle, dirPin, stepPin, stepperEnable, HC12, HC12String);
   Serial.println(position);
-  Serial.println(positionplateau);
+  Serial.println(positionPlateau);
 }
-void tournerplateaupurge()
+
+
+void tournerPlateauPurge()
 {
   digitalWrite(stepperEnable,LOW);//Enable stepper motor control
   delay(1);
@@ -400,42 +387,42 @@ void tournerplateaupurge()
   if(stop_loop==true){return;}
   delay(50);
   takePurgePosition(&position, dirPin, stepPin, stepperEnable, HC12, HC12String);
- }
+}
 
-void verinpurge()
+
+void valvePurge()
 {
   takePurgePosition(&position,dirPin, stepPin, stepperEnable, HC12, HC12String);
   if(stop_loop==true){return;}
-  verinpurgeOut(verinOutPin, verinInPin);
+  valvePurgeOut(svPurgePin, svBoutPin);
   delay(4000);
-  verinOut(HC12, HC12String);
+  valveOut(HC12, HC12String);
   if(stop_loop==true){return;}
-  Pompage(8);
+  pompage(8);
   if(stop_loop==true){return;}
-  verinIn(HC12, HC12String);
+  valveIn(HC12, HC12String);
   if(stop_loop==true){return;}
   delay(500);
-  verinpurgeIn(verinOutPin, verinInPin);
+  valvePurgeIn(svPurgePin, svBoutPin);
   delay(4000);
 }
 
 
-
-void verinpurgesanspompage()
+void valvePurgeSansPompage()
 {
   digitalWrite(stepperEnable,LOW);//Enable stepper motor control
   takePurgePosition(&position,dirPin, stepPin, stepperEnable, HC12, HC12String);
   if(stop_loop==true){return;}
-  verinpurgeOut(verinOutPin, verinInPin);
+  valvePurgeOut(svPurgePin, svBoutPin);
   delay(4000);
-  verinOut(HC12, HC12String);
+  valveOut(HC12, HC12String);
   if(stop_loop==true){return;}
   delay(5000);
   if(stop_loop==true){return;}
-  verinIn(HC12, HC12String);
+  valveIn(HC12, HC12String);
   if(stop_loop==true){return;}
   delay(500);
-  verinpurgeIn(verinOutPin, verinInPin);
+  valvePurgeIn(svPurgePin, svBoutPin);
   delay(4000);
 
 }
@@ -445,4 +432,4 @@ void Resetfct()
 {
     digitalWrite(ResetPin, LOW);
 
-  }
+}
