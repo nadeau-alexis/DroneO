@@ -114,8 +114,8 @@ void setup()
   pinMode(LED_BUILTIN, OUTPUT);
 
   // SWITCHES
-  pinMode(lsPlateauPin, INPUT_PULLUP); // SIG_LS_PLATEAU
-  pinMode(lsTreuilPin, INPUT_PULLUP);  // SIG_LS_TREUIL
+  pinMode(lsPlateauPin, INPUT); // SIG_LS_PLATEAU
+  pinMode(lsTreuilPin, INPUT);  // SIG_LS_TREUIL
   pinMode(boutonManuel, INPUT_PULLUP); 
 
   // PREPARING MACHINE
