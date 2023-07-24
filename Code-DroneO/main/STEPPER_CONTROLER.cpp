@@ -175,15 +175,15 @@ void takePosition(int* positionPointer_, int wantedPostion, int dirPin_, int ste
     }
      
     *positionPointer_ = wantedPostion;
-     positionplateau=wantedPostion;
+     positionPlateau=wantedPostion;
 }
 //FONCTION QUI PERMET AU CARROUSSEL DE SE POSITIONNER ENTRE DEUX BOUTEILLES POUR EFFECTUER LA PURGE
 
 void takePurgePosition(int* positionPointer_, int dirPin_, int stepPin_, int stepperEnable_, SoftwareSerial &HC12object, String HC12String_)
 {
-    positionplateau= *positionPointer_;
+    positionPlateau= *positionPointer_;
     long map[]={0,2600,11200,19400,27500,35650,43700,0,0,0,0,6900,15300,23450,31575,39675,47725};
-    long difference = map[positionplateau + 10] - map[positionplateau];
+    long difference = map[positionPlateau + 10] - map[positionPlateau];
 
     int vitesse = 0;
 
@@ -226,7 +226,7 @@ void takePurgePosition(int* positionPointer_, int dirPin_, int stepPin_, int ste
             return;
         }
     }
-    *positionPointer_=positionplateau+10;
+    *positionPointer_=positionPlateau+10;
 }
 
 //FONCTION QUI PERMET AU CARROUSSEL DE TOURNER MANUELLEMENT
