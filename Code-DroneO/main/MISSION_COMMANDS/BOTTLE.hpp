@@ -1,5 +1,5 @@
-#ifndef bdc_controler_hpp
-#define bdc_controler_hpp
+#ifndef BDC_CONTROLLER_hpp
+#define BDC_CONTROLLER_hpp
 
 
 
