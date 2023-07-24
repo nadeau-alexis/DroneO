@@ -2,7 +2,7 @@
 #define VARIABLES_HPP
 
 extern bool stop_loop;
-extern int positionplateau;
+extern int positionPlateau;
 
 void printGlobal();
 #endif
