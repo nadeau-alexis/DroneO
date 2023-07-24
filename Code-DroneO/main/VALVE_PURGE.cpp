@@ -1,17 +1,17 @@
 #include "VALVE_PURGE.hpp"
 #include <Arduino.h>
 
-void valvePurgeOut(int valveOutPin_, int valveInPin_)
+void valvePurgeOut(int svPurgePin_, int svBoutPin_)
 {
-    digitalWrite(valveOutPin_, HIGH);
-	  digitalWrite(valveInPin_, LOW);
+    digitalWrite(svPurgePin_, HIGH);
+	  digitalWrite(svBoutPin_, LOW);
 
    //digitalWrite(relay1, HIGH);
    //digitalWrite(relay2, LOW);
 }
 
-void valvePurgeIn(int valveOutPin_, int valveInPin_)
+void valvePurgeIn(int svPurgePin_, int svBoutPin_)
 {
-    digitalWrite(valveOutPin_, LOW);
-	  digitalWrite(valveInPin_, HIGH);
+    digitalWrite(svPurgePin_, LOW);
+	  digitalWrite(svBoutPin_, HIGH);
 }
