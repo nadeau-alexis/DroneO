@@ -1,11 +1,42 @@
 #include "BDC_CONTROLLER.hpp"
 #include <Arduino.h>
 #include <SoftwareSerial.h>
+#include <Encoder.h>
+#include <PID_v1.h>
 #include "HC12.hpp"
 #include "variables.hpp"
 
+//Need to be able to use phTreuilPin, enTreuilPin, Setpoint, Output, Input variables
+void prototypeFunction(PID &PIDObject, Encoder &EncoderObject, int hallSensor, SoftwareSerial &HC12object, String HC12String_)
+{
+  long newEncTreuil;
+  newEncTreuil = EncoderObject.read();
+  Input = EncoderObject.read();
+  PIDObject.Compute();
 
+  if (newEncTreuil < Setpoint - 2) {
+    digitalWrite(phTreuilPin, HIGH);
+    analogWrite(enTreuilPin, Output);
+  }
+  else if (newEncTreuil > Setpoint + 2) {
+    digitalWrite(phTreuilPin, LOW);
+    analogWrite(enTreuilPin, Output);
+  }
+  else {
+    analogWrite(enTreuilPin, 0);
+  }
 
+  if (newEncTreuil != positionEncTreuil) {
+    positionEncTreuil = newEncTreuil;
+  }
+
+  Serial.print("Encoder = ");
+  Serial.print(newEncTreuil);
+  Serial.print(" / Output = ");
+  Serial.print(Output);
+  Serial.println();
+
+}
 
 void treuilRoll(int speed, int limitswitch,SoftwareSerial &HC12object, String HC12String_)
 {
