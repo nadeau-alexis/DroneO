@@ -18,8 +18,8 @@
 
 
 // ------- CONSTANTS -------
-const int phTreuilPin   = 4;  // EN_TREUIL (pwm)
-const int enTreuilPin   = 5;  // PH_TREUIL (direction)
+const int phTreuilPin   = 4;  // PH_TREUIL (direction)
+const int enTreuilPin   = 5;  // EN_TREUIL (pwm)
 const int flowPin       = 7;  // SIG_FL_SENSOR
 const int stepperEnable = 8;  // STP_EN
 const int stepPin       = 9;  // STP_STEP
