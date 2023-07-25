@@ -85,20 +85,10 @@ void setup()
   // Motor_1 TREUIL control pin initiate
   pinMode(phTreuilPin, OUTPUT);     
   pinMode(enTreuilPin, OUTPUT);    
-  pinMode(9, OUTPUT); // Speed control
-  
-  // Motor_2 VALVE control pin initiate
-  pinMode(7, OUTPUT);     
-  pinMode(8, OUTPUT);    
-  pinMode(10, OUTPUT);  // Speed control
 
   // VALVE pin initiate
   pinMode(svBoutPin, OUTPUT);
-  pinMode(svPurgePin, OUTPUT);   
-  
-  //Disable the Motor Shield output
-  pinMode(6, OUTPUT); 
-  digitalWrite(6, LOW); 
+  pinMode(svPurgePin, OUTPUT);
 
   // STEPPER BOTTLES control pin initiale
   pinMode(stepPin, OUTPUT); // STEP PIN
