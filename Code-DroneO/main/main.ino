@@ -285,7 +285,7 @@ void pompage(int duree)
     debut=millis();
     for (int i=0; i<5;i++)
     {
-      d1=checkCommunication(HC12, HC12String);
+      d=checkCommunication(HC12, HC12String);
       Serial.println(d);
       if(d==100)
       {
@@ -299,7 +299,7 @@ void pompage(int duree)
        delay(1000); 
       }
     }
-    fin1=millis();
+    fin=millis();
     Serial.println(fin-debut);
 
 }
