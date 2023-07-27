@@ -12,12 +12,12 @@ Raphaël Pereira
 
 
 //Déclaration des pins
-const int SVBout = 16; //SV_BOUT
+const int svBoutPin = 16; //SV_BOUT
 const int svPurgPin = 17; //SV_PURG
 const int pompePin = 13; //PWM_POMPE
-const int PHTreuil = 4; //EN_TREUIL (pwm)
-const int ENTreuil = 5; //PH_TREUIL (direction)
-const int SIGFlSensor = 7; //SIG_FL_SENSOR
+const int phTreuilPin = 4; //EN_TREUIL (pwm)
+const int enTreuilPin = 5; //PH_TREUIL (direction)
+const int flowPin = 7; //SIG_FL_SENSOR
 const int lsPlateauPin = 20; //SIG_LS_PLATEAU
 const int lsTreuilPin = 21; //SIG_LS_TREUIL
 const int ledPin = 6; //TEMPORAIRE Led d'état
@@ -58,12 +58,12 @@ void testHallSensor();
 void setup() {
   // put your setup code here, to run once:
   
-  pinMode(SVBout, OUTPUT);
+  pinMode(svBoutPin, OUTPUT);
   pinMode(svPurgPin, OUTPUT);
   pinMode(pompePin, OUTPUT);
   pinMode(ledPin, OUTPUT);
-  pinMode(ENTreuil, OUTPUT);
-  pinMode(PHTreuil, OUTPUT);
+  pinMode(enTreuilPin, OUTPUT);
+  pinMode(phTreuilPin, OUTPUT);
   pinMode(lsPlateauPin, INPUT);
   pinMode(lsTreuilPin, INPUT);
 
@@ -80,7 +80,7 @@ void setup() {
   //turn the PID on
   myPID.SetMode(AUTOMATIC);
 
-  attachInterrupt(digitalPinToInterrupt(SIGFlSensor), pulse, RISING); //on active les interrupts sur le pin du débitmètre
+  attachInterrupt(digitalPinToInterrupt(flowPin), pulse, RISING); //on active les interrupts sur le pin du débitmètre
 
   //Utile pour débug
   Serial.begin(9600);
@@ -111,7 +111,7 @@ void loop() {
   /*
   digitalWrite(ledPin, HIGH);
   delay(5000);
-  digitalWrite(SVBout, HIGH);
+  digitalWrite(svBoutPin, HIGH);
   delay(5000);
   digitalWrite(svPurgPin, HIGH);
   delay(5000);
@@ -121,18 +121,18 @@ void loop() {
   stepper1.setSpeed(3200);
   stepper1.runSpeed();
   delay(5000);
-  digitalWrite(PHTreuil, HIGH);
-  analogWrite(ENTreuil, 255);
+  digitalWrite(phTreuilPin, HIGH);
+  analogWrite(enTreuilPin, 255);
 
   delay(10000);
 
   digitalWrite(ledPin, LOW);
-  digitalWrite(SVBout, LOW);
+  digitalWrite(svBoutPin, LOW);
   digitalWrite(svPurgPin, LOW);
   digitalWrite(pompePin, LOW);
   stepper1.disableOutputs();
   stepper1.setSpeed(0);
-  analogWrite(ENTreuil, 0);
+  analogWrite(enTreuilPin, 0);
   
   delay(10000);
   */
@@ -140,10 +140,10 @@ void loop() {
 
 void testValves() {
 
-  digitalWrite(SVBout, HIGH);
+  digitalWrite(svBoutPin, HIGH);
   digitalWrite(ledPin, HIGH);
   delay(5000);
-  digitalWrite(SVBout, LOW);
+  digitalWrite(svBoutPin, LOW);
   digitalWrite(ledPin, LOW);
   delay(1000);
   digitalWrite(svPurgPin, HIGH);
@@ -196,15 +196,15 @@ void testTreuil() {
   myPID.Compute();
 
   if (newEncTreuil < Setpoint - 2) {
-    digitalWrite(PHTreuil, HIGH);
-    analogWrite(ENTreuil, Output);
+    digitalWrite(phTreuilPin, HIGH);
+    analogWrite(enTreuilPin, Output);
   }
   else if (newEncTreuil > Setpoint + 2) {
-    digitalWrite(PHTreuil, LOW);
-    analogWrite(ENTreuil, Output);
+    digitalWrite(phTreuilPin, LOW);
+    analogWrite(enTreuilPin, Output);
   }
   else {
-    analogWrite(ENTreuil, 0);
+    analogWrite(enTreuilPin, 0);
   }
 
   if (newEncTreuil != positionEncTreuil) {
