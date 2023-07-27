@@ -1,13 +1,13 @@
 #include "PUMP_CONTROLLER.hpp"
 #include <Arduino.h>
 
-void pumpOn(int pumpPin_)
+void pumpOn(int PWMPompe_)
 {
-    digitalWrite(pumpPin_, HIGH);
+    digitalWrite(PWMPompe_, HIGH);
 }
 
-void pumpOff(int pumpPin_)
+void pumpOff(int PWMPompe_)
 {
-    digitalWrite(pumpPin_, LOW);
+    digitalWrite(PWMPompe_, LOW);
 }
 
