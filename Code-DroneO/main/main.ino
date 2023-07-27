@@ -282,7 +282,7 @@ void pompage(int duree)
   int fin;
   int d=0;
     pumpOn(pumpPin);
-    debut1=millis();
+    debut=millis();
     for (int i=0; i<5;i++)
     {
       d1=checkCommunication(HC12, HC12String);
