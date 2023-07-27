@@ -13,21 +13,33 @@
 
 
 // ---------- CONSTANTS ----------
-const int stepPin = 15;
-const int dirPin = 14;
-const int stepHomeSwitch = 16;  //SP
-const int irsensor = 17;  //SJ
-const int boutonManuel = 18;
-const int stepperEnable = 23;  
-const int SwitchTreuilFinE = 20;  //SE
-const int SwitchTreuilFinD = 21;  //SD
+const int PWMPompe = 1;
 
-const int verinOutPin = 28;
-const int verinInPin = 29;
+const int CSTreuil = 4;  // CSelect Treuil
+const int ENTreuil = 27;  // Enable Treuil
+const int PHTreuil = 26;  // Enable Treuil
+const int ENCFBA = 25;  //encodeur du Treuil FB_A
+const int ENCFBB = 24;  //encodeur du Treuil FB_B
 
-const int pump1Pin = 48;
-const int pump2Pin =49;
-const int ResetPin = 22;
+const int SIGLSTreuil = 7;  //anciennement SwitchTreuilFinE
+
+
+const int STPFault = 5;  // Fault Plateau
+const int SIGLSPlateau = 6;  //anciennement stepHomeSwitch
+const int STPEn = 30; //anciennement stepperEnable 
+const int STPStep = 31; //anciennement stepPin
+const int STPDir = 32; //anciennement dirPin
+const int JOGPlateau = 16; //anciennement boutonManuel
+
+const int SVPurg = 19; //ouverture valve pour purge
+const int SVBout = 18; //ouverture valve pour remplissage bouteille
+
+const int SIGFlSensor = 29; //mesure du débit
+
+const int HC12RXD = 34;
+const int HC12TXD = 33;
+
+const int RESET = 17; //anciennementResetPin
 
 // ---------- VARIABLES ----------
 int position = 0;
@@ -38,7 +50,7 @@ int D = 0;
 int N = 1;
 
 // ----------- OBJETS ------------
-SoftwareSerial HC12(11, 12); // HC-12 TX Pin, HC-12 RX Pin
+SoftwareSerial HC12(HC12TXD, HC12RXD); // HC-12 TX Pin, HC-12 RX Pin
 
 
 // --------- PROTOTYPES -----------
@@ -50,57 +62,58 @@ void setup()
 {
   Serial.begin(9600);
   HC12.begin(9600);
-
-  digitalWrite(ResetPin, HIGH);
+  
+  pinMode(RESET, OUTPUT);
+  digitalWrite(RESET, HIGH);
   delay(200); 
-  pinMode(ResetPin, OUTPUT);
   // ---------- pin initialisation ----------
   // --- Motors ---
-  // Motor_1 TREUIL control pin initiate
-  pinMode(4, OUTPUT);     
-  pinMode(5, OUTPUT);    
-  pinMode(9, OUTPUT); // Speed control
+  // Motor TREUIL control pin initiate
   
-  // Motor_2 VERIN control pin initiate
-  pinMode(7, OUTPUT);     
-  pinMode(8, OUTPUT);    
-  pinMode(10, OUTPUT);  // Speed control
-
-  // VERIN Purge control pin initiate
-  pinMode(verinOutPin, OUTPUT);     
-  pinMode(verinInPin, OUTPUT);    
+  pinMode(ENTreuil, OUTPUT); //    
+  pinMode(CSTreuil, OUTPUT); //   
+  pinMode(PHTreuil, OUTPUT); //
   
-  //Disable the Motor Shield output
-  pinMode(6, OUTPUT); 
-  digitalWrite(6, LOW); 
+  pinMode(ENCFBA, INPUT_PULLUP); //
+  pinMode(ENCFBB, INPUT_PULLUP); //
+  pinMode(SIGLSTreuil, INPUT_PULLUP);
 
-  // STEPPER BOTTLES control pin initiale
-  pinMode(stepPin, OUTPUT); // STEP PIN
-  pinMode(dirPin, OUTPUT); // DIR PIN
-  pinMode(stepperEnable, OUTPUT);
-  digitalWrite(stepperEnable,HIGH);//Disable stepper motor control
-  pinMode(stepHomeSwitch, INPUT_PULLUP);
+  digitalWrite(ENTreuil, LOW); //Disable treuil motor control (HIGH ou LOW à valider)
+
+
+ // Motor Stepper Plateau control pin initiale
+  
+  pinMode(STPStep, OUTPUT); // STEP PIN
+  pinMode(STPDir, OUTPUT); // DIR PIN
+  pinMode(STPEn, OUTPUT);
+  pinMode(SIGLSPlateau, INPUT_PULLUP);
+  
+  digitalWrite(STPEn, HIGH);// Disable stepper motor control (HIGH ou LOW à valider)
+   
+    // Valve control pin initiate
+  
+  pinMode(SVPurg, OUTPUT);     
+  pinMode(SVBout, OUTPUT);    
+
+  // Lecture débitmètre pin initiate
+  pinMode(SIGFlSensor, INPUT_PULLUP);     
 
   // PUMP 1 AND PUMP 2 control pin initiate
-  pinMode(pump1Pin, OUTPUT);
-  pinMode(pump2Pin, OUTPUT);
-  // --- LED ---
-  pinMode(LED_BUILTIN, OUTPUT);
+  pinMode(PWMPompe, OUTPUT);
+  
 
-  // SWITCHES
-  pinMode(SwitchTreuilFinE, INPUT_PULLUP); //SE
-  pinMode(SwitchTreuilFinD, INPUT_PULLUP); //SD1
-  pinMode(irsensor, INPUT_PULLUP); //SIR
-  pinMode(boutonManuel, INPUT_PULLUP); 
+  // SWITCH
+ 
+  pinMode(JOGPlateau, INPUT_PULLUP); 
 
   // PREPARING MACHINE
 
-  pump2off(pump2Pin);
-  pump1off(pump1Pin);
-  verinIn(HC12, HC12String);
-  delay(500);
-  verinpurgeIn(verinOutPin, verinInPin);
-  delay(4000);
+  //pump2off(pump2Pin);
+  //pump1off(pump1Pin);
+  //verinIn(HC12, HC12String);
+  //delay(500);
+  //verinpurgeIn(verinOutPin, verinInPin);
+  //delay(4000);
 
   Serial.println("INITIALISATION");
   digitalWrite(stepperEnable,LOW);//Enable stepper motor control
