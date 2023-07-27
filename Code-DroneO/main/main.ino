@@ -59,7 +59,7 @@ long positionEncTreuil  = -999; // Gives a value to encoder variable
 double Setpoint, Input, Output; // PID variables
 double Kp=0.5, Ki=0.1, Kd=0; // Put Kd at 0.1 if we want to slow down and arrive smoothly at target
 
-volatile int flowCount = 0; // Volatile variables are better suited for use with interrupts
+volatile int flowPulseCount = 0; // Volatile variables are better suited for use with interrupts
 
 // ------- OBJECTS -------
 SoftwareSerial HC12(11, 12); // HC-12 TX Pin, HC-12 RX Pin
@@ -102,6 +102,9 @@ void setup()
  
   // --- LED ---
   pinMode(LED_BUILTIN, OUTPUT);
+
+  // FLOW METER
+  attachInterrupt(digitalPinToInterrupt(flowPin), pulse, RISING);
 
   // SWITCHES
   pinMode(hsPlateauPin, INPUT); // SIG_LS_PLATEAU
@@ -415,6 +418,12 @@ void valvePurgeSansPompage()
   valvePurgeIn(svPurgePin, svBoutPin);
   delay(4000);
 
+}
+
+//ISR pour le débimètre:
+void pulse() {
+  flowPulseCount++;
+  previousMicros = currentMicros; // Update time since last pulse
 }
 
 
