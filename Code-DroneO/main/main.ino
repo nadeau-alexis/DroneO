@@ -38,7 +38,7 @@ const int irsensor = 1; // TO DO : remove when irsensor is no longer needed for 
 // TO DO : Give each command we want to check for a verbose name 
 // and associate it with the number it previously had to add clarity to the code 
 // Here is an example, name and associated number might need to be changed
-//const int PUMP_COMMAND = 30;
+//#define PUMP_COMMAND 30
 
 
 // ------- VARIABLES -------
