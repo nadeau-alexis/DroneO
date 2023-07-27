@@ -6,7 +6,7 @@
 #include "HC12.hpp"
 #include "variables.hpp"
 
-//Need to be able to use phTreuilPin, enTreuilPin, Setpoint, Output, Input variables
+//Need to be able to use PHTreuil, ENTreuil, Setpoint, Output, Input variables
 void prototypeFunction(PID &PIDObject, Encoder &EncoderObject, int hallSensor, SoftwareSerial &HC12object, String HC12String_)
 {
   long newEncTreuil;
@@ -15,15 +15,15 @@ void prototypeFunction(PID &PIDObject, Encoder &EncoderObject, int hallSensor, S
   PIDObject.Compute();
 
   if (newEncTreuil < Setpoint - 2) {
-    digitalWrite(phTreuilPin, HIGH);
-    analogWrite(enTreuilPin, Output);
+    digitalWrite(PHTreuil, HIGH);
+    analogWrite(ENTreuil, Output);
   }
   else if (newEncTreuil > Setpoint + 2) {
-    digitalWrite(phTreuilPin, LOW);
-    analogWrite(enTreuilPin, Output);
+    digitalWrite(PHTreuil, LOW);
+    analogWrite(ENTreuil, Output);
   }
   else {
-    analogWrite(enTreuilPin, 0);
+    analogWrite(ENTreuil, 0);
   }
 
   if (newEncTreuil != positionEncTreuil) {
