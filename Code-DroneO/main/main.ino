@@ -60,6 +60,10 @@ double Setpoint, Input, Output; // PID variables
 double Kp=0.5, Ki=0.1, Kd=0; // Put Kd at 0.1 if we want to slow down and arrive smoothly at target
 
 volatile int flowPulseCount = 0; // Volatile variables are better suited for use with interrupts
+unsigned long previousMicros = 0; //variables pour gérer le temps
+unsigned long currentMicros = 0;
+unsigned long interval = 0;
+
 
 // ------- OBJECTS -------
 SoftwareSerial HC12(11, 12); // HC-12 TX Pin, HC-12 RX Pin
