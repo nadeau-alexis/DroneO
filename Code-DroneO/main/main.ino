@@ -144,144 +144,146 @@ void setup()
 
 void loop() 
 {
- askedCommand = checkCommunication(HC12, HC12String);
-          delay(1);
-          if(askedCommand==RESET_CMD)
-          {
-            Serial.println(askedCommand);
-            returnMessage(HC12, 1);
-            Resetfct();
-          }
+  askedCommand = checkCommunication(HC12, HC12String);
+  delay(1);
+  if(askedCommand==RESET_CMD)
+  {
+    Serial.println(askedCommand);
+    returnMessage(HC12, 1);
+    Resetfct();
+  }
           
-   else if(stop_loop==false)
+  else if(stop_loop==false)
   {
 
-          if(askedCommand!=0 && askedCommand<=6)
-          {
-            Serial.println(askedCommand);
-            delay(2000);
-            D = checkCommunication(HC12, HC12String);
-            commandeRemplissageManuel(askedCommand, D);
-            returnMessage(HC12, 1);
-            D = 0;
-          }
-          
-        
-        else if(askedCommand==TREUIL_UNROLL_CMD)
-          {
-            treuilUnroll(1, SIGLSTreuil, HC12, HC12String);
-            returnMessage(HC12, 1);
-          }
-        
-          else if(askedCommand==TREUIL_ROLL_CMD)
-          {
-            treuilRoll(1, SIGLSTreuil, HC12, HC12String);
-            Serial.println(stop_loop);
-            returnMessage(HC12, 1);
-          }
-          else if(askedCommand==RETURN_MSG_CMD)
-          {
-            returnMessage(HC12, 1);
-          }
+    switch (askedCommand){
+      // Manual filling for bottles 1 to 6
+      case 1: case 2: case 3: case 4: case 5: case 6:
+        Serial.println(askedCommand);
+        delay(2000);
+        D = checkCommunication(HC12, HC12String);
+        commandeRemplissageManuel(askedCommand, D);
+        returnMessage(HC12, 1);
+        D = 0;
+        break;
 
-          else if(askedCommand==TREUIL_UNROLL_MAN_CMD)
+      case TREUIL_UNROLL_CMD:
+        treuilUnroll(1, SIGLSTreuil, HC12, HC12String);
+        returnMessage(HC12, 1);
+        break;
+
+      case TREUIL_ROLL_CMD:
+        treuilRoll(1, SIGLSTreuil, HC12, HC12String);
+        Serial.println(stop_loop);
+        returnMessage(HC12, 1);
+        break;
+      
+      case RETURN_MSG_CMD:
+        returnMessage(HC12, 1);
+        break;
+
+      case TREUIL_UNROLL_MAN_CMD:
+        int debut;
+        int fin;
+        Serial.println(askedCommand);
+        N=0;
+        debut=millis();
+        while(N==0)
+        {
+          N = checkCommunication(HC12, HC12String);
+          delay(10);
+        }
+        fin=millis();
+        Serial.println(N);
+        Serial.println(fin-debut);
+        treuilUnrollManual(N, 1, SIGLSTreuil, 1, HC12, HC12String);
+        returnMessage(HC12, 1);
+        break;
+
+      case TREUIL_ROLL_MAN_CMD:
+        int debut;
+        int fin;
+        Serial.println(askedCommand);
+        N=0;
+        debut=millis();
+        while(N==0)
+        {
+          N = checkCommunication(HC12, HC12String);
+          delay(10);
+        }
+        fin=millis();
+        Serial.println(N);
+        Serial.println(fin-debut);
+        treuilRollManual(N, 1, SIGLSTreuil, 1, HC12, HC12String);
+        returnMessage(HC12, 1);
+        break;
+      
+      // Fill bottles 1 to 6
+      case 21: case 22: case 23: case 24: case 25: case 26:
+        Serial.println(askedCommand);
+        delay(2000);
+        D = checkCommunication(HC12, HC12String);
+        remplissage(askedCommand-20, D);
+        returnMessage(HC12, 1);
+        D = 0;
+        break;
+
+      // Turn tray to bottle position 1 to 6
+      case 51: case 52: case 53: case 54: case 55: case 56:
+        Serial.println(askedCommand);
+        tournerPlateau(askedCommand-50);
+        returnMessage(HC12, 1);
+        break;
+      
+      case PUMP_CMD:
+        Serial.println(askedCommand);
+        delay(2000);
+        D = checkCommunication(HC12, HC12String);
+        Serial.println(D);
+        pompage(D);
+        returnMessage(HC12, 1);
+        D = 0;
+        break;
+      
+      case TURN_TRAY_PURGE_CMD:
+        Serial.println(askedCommand);
+        tournerPlateauPurge();
+        returnMessage(HC12, 1);
+        break;
+
+      case PURGE_CMD:
+        Serial.println(askedCommand);
+        digitalWrite(STPEn, LOW); // Enable stepper motor control
+        valvePurge();
+        returnMessage(HC12, 1);
+        break;
+      
+      case RESET_CMD:
+        Serial.println(askedCommand);
+        returnMessage(HC12, 1);
+        Resetfct();
+        break;
+
+      case PURGE_NO_PUMP_CMD:
+        Serial.println(askedCommand);
+        returnMessage(HC12, 1);
+        valvePurgeSansPompage();
+        break;
+      
+      default: 
+        if(digitalRead(JOGPlateau) == 0)
+        {
+          delay(5);
+          if(digitalRead(JOGPlateau) == 0) // PROTECTION AU BRUIT
           {
-            int debut;
-            int fin;
-            Serial.println(askedCommand);
-            N=0;
-            debut=millis();
-            while(N==0)
-            {
-               N = checkCommunication(HC12, HC12String);
-               delay(10);
-            }
-            fin=millis();
-            Serial.println(N);
-            Serial.println(fin-debut);
-            treuilUnrollManual(N, 1, SIGLSTreuil, 1, HC12, HC12String);
-            returnMessage(HC12, 1);
-          }
-        
-          else if(askedCommand==TREUIL_ROLL_MAN_CMD)
-          {
-            int debut;
-            int fin;
-            Serial.println(askedCommand);
-            N=0;
-            debut=millis();
-            while(N==0)
-            {
-               N = checkCommunication(HC12, HC12String);
-               delay(10);
-            }
-            fin=millis();
-            Serial.println(N);
-            Serial.println(fin-debut);
-            treuilRollManual(N, 1, SIGLSTreuil, 1, HC12, HC12String);
-            returnMessage(HC12, 1);
-          }
-          else if(askedCommand>=21&& askedCommand<=26)
-          {
-            Serial.println(askedCommand);
-            delay(2000);
-            D = checkCommunication(HC12, HC12String);
-            remplissage(askedCommand-20, D);
-            returnMessage(HC12, 1);
-            D = 0;
-          }
-          else if(askedCommand>=51&& askedCommand<=56)
-          {
-            Serial.println(askedCommand);
-            tournerPlateau(askedCommand-50);
-            returnMessage(HC12, 1);
-          }
-        else if(askedCommand==PUMP_CMD)
-          {
-            Serial.println(askedCommand);
-            delay(2000);
-            D = checkCommunication(HC12, HC12String);
-            Serial.println(D);
-            pompage(D);
-            returnMessage(HC12, 1);
-            D = 0;
-          }
-          else if(askedCommand==TURN_TRAY_PURGE_CMD)
-          {
-            Serial.println(askedCommand);
-            tournerPlateauPurge();
-            returnMessage(HC12, 1);
-          }
-          else if(askedCommand==PURGE_CMD)
-          {
-            Serial.println(askedCommand);
             digitalWrite(STPEn, LOW); // Enable stepper motor control
-            valvePurge();
-            returnMessage(HC12, 1);
+            delay(1);
+            manualTurning(14, 15, 100, JOGPlateau);
+            digitalWrite(STPEn, HIGH); // Disable stepper motor control
           }
-         else if(askedCommand==RESET_CMD)
-          {
-            Serial.println(askedCommand);
-            returnMessage(HC12, 1);
-            Resetfct();
-          }
-          else if(askedCommand==PURGE_NO_PUMP_CMD)
-          {
-            Serial.println(askedCommand);
-            returnMessage(HC12, 1);
-            valvePurgeSansPompage();
-          }
-         else if(digitalRead(JOGPlateau) == 0)
-          {
-            delay(5);
-            if(digitalRead(JOGPlateau) == 0) // PROTECTION AU BRUIT
-            {
-              digitalWrite(STPEn, LOW); // Enable stepper motor control
-              delay(1);
-              manualTurning(14, 15, 100, JOGPlateau);
-              digitalWrite(STPEn, HIGH); // Disable stepper motor control
-            }
-          }
+        }
+        break;
+    }
   }
 }
 
