@@ -47,7 +47,6 @@ const int SIGLSTreuil   = 21; // SIG_LS_TREUIL
 #define TREUIL_UNROLL_CMD     8
 #define TREUIL_ROLL_CMD       9
 #define RETURN_MSG_CMD        10
-#define NORMAL_MODE_CMD       11
 #define TREUIL_UNROLL_MAN_CMD 12
 #define TREUIL_ROLL_MAN_CMD   13
 #define PUMP_CMD              30
@@ -59,7 +58,6 @@ const int SIGLSTreuil   = 21; // SIG_LS_TREUIL
 // ------- VARIABLES -------
 int position = 0;
 int askedCommand = 0;
-bool modeNormal = false;
 String HC12String;
 int D = 0;
 int N = 1;
@@ -185,13 +183,7 @@ void loop()
           {
             returnMessage(HC12, 1);
           }
-        
-          else if(askedCommand==NORMAL_MODE_CMD)
-          {
-            modeNormal = true;
-            returnMessage(HC12, 1);
-          }
-        
+
           else if(askedCommand==TREUIL_UNROLL_MAN_CMD)
           {
             int debut;
