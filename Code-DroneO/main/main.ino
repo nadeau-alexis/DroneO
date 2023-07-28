@@ -44,8 +44,17 @@ const int SIGLSTreuil   = 21; // SIG_LS_TREUIL
 // TO DO : Give each command we want to check for a verbose name 
 // and associate it with the number it previously had to add clarity to the code 
 // Here is an example, name and associated number might need to be changed
-//#define PUMP_COMMAND 30
-
+#define TREUIL_UNROLL_CMD     8
+#define TREUIL_ROLL_CMD       9
+#define RETURN_MSG_CMD        10
+#define NORMAL_MODE_CMD       11
+#define TREUIL_UNROLL_MAN_CMD 12
+#define TREUIL_ROLL_MAN_CMD   13
+#define PUMP_CMD              30
+#define TURN_TRAY_PURGE_CMD   40
+#define PURGE_CMD             60
+#define RESET_CMD             70
+#define PURGE_NO_PUMP_CMD     80
 
 // ------- VARIABLES -------
 int position = 0;
@@ -139,7 +148,7 @@ void loop()
 {
  askedCommand = checkCommunication(HC12, HC12String);
           delay(1);
-          if(askedCommand==70)
+          if(askedCommand==RESET_CMD)
           {
             Serial.println(askedCommand);
             returnMessage(HC12, 1);
@@ -160,30 +169,30 @@ void loop()
           }
           
         
-        else if(askedCommand==8)
+        else if(askedCommand==TREUIL_UNROLL_CMD)
           {
             treuilUnroll(1, SIGLSTreuil, HC12, HC12String);
             returnMessage(HC12, 1);
           }
         
-          else if(askedCommand==9)
+          else if(askedCommand==TREUIL_ROLL_CMD)
           {
             treuilRoll(1, SIGLSTreuil, HC12, HC12String);
             Serial.println(stop_loop);
             returnMessage(HC12, 1);
           }
-          else if(askedCommand==10)
+          else if(askedCommand==RETURN_MSG_CMD)
           {
             returnMessage(HC12, 1);
           }
         
-          else if(askedCommand==11)
+          else if(askedCommand==NORMAL_MODE_CMD)
           {
             modeNormal = true;
             returnMessage(HC12, 1);
           }
         
-          else if(askedCommand==12)
+          else if(askedCommand==TREUIL_UNROLL_MAN_CMD)
           {
             int debut;
             int fin;
@@ -202,7 +211,7 @@ void loop()
             returnMessage(HC12, 1);
           }
         
-          else if(askedCommand==13)
+          else if(askedCommand==TREUIL_ROLL_MAN_CMD)
           {
             int debut;
             int fin;
@@ -235,7 +244,7 @@ void loop()
             tournerPlateau(askedCommand-50);
             returnMessage(HC12, 1);
           }
-        else if(askedCommand==30)
+        else if(askedCommand==PUMP_CMD)
           {
             Serial.println(askedCommand);
             delay(2000);
@@ -245,26 +254,26 @@ void loop()
             returnMessage(HC12, 1);
             D = 0;
           }
-          else if(askedCommand==40)
+          else if(askedCommand==TURN_TRAY_PURGE_CMD)
           {
             Serial.println(askedCommand);
             tournerPlateauPurge();
             returnMessage(HC12, 1);
           }
-          else if(askedCommand==60)
+          else if(askedCommand==PURGE_CMD)
           {
             Serial.println(askedCommand);
             digitalWrite(STPEn, LOW); // Enable stepper motor control
             valvePurge();
             returnMessage(HC12, 1);
           }
-         else if(askedCommand==70)
+         else if(askedCommand==RESET_CMD)
           {
             Serial.println(askedCommand);
             returnMessage(HC12, 1);
             Resetfct();
           }
-          else if(askedCommand==80)
+          else if(askedCommand==PURGE_NO_PUMP_CMD)
           {
             Serial.println(askedCommand);
             returnMessage(HC12, 1);
