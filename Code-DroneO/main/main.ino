@@ -41,9 +41,8 @@ const int SIGLSTreuil   = 21; // SIG_LS_TREUIL
 
 
 // ------- COMMAND NAMES -------
-// TO DO : Give each command we want to check for a verbose name 
-// and associate it with the number it previously had to add clarity to the code 
-// Here is an example, name and associated number might need to be changed
+// This gives the command numbers a variable name that is easier to read
+// But at compilation, the compiler replaces each instanfce of the variable names with the numbers we define it to be
 #define TREUIL_UNROLL_CMD     8
 #define TREUIL_ROLL_CMD       9
 #define RETURN_MSG_CMD        10
