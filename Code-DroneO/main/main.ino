@@ -31,7 +31,7 @@ const int HC12TXD       = 11;
 const int HC12RXD       = 12;
 const int PWMPompe      = 13; // PWM_POMPE
 const int JOGPlateau    = 14;
-const int ResetPin      = 15;
+const int RESET         = 15;
 const int SVBout        = 16; // SV_BOUT
 const int SVPurg        = 17; // SV_PURG
 const int CSTreuil      = 18; // CSelect Treuil
@@ -182,19 +182,19 @@ void loop()
         break;
 
       case TREUIL_UNROLL_MAN_CMD:
-        int debut;
-        int fin;
+        int debut_unroll;
+        int fin_unroll;
         Serial.println(askedCommand);
         N=0;
-        debut=millis();
+        debut_unroll=millis();
         while(N==0)
         {
           N = checkCommunication(HC12, HC12String);
           delay(10);
         }
-        fin=millis();
+        fin_unroll=millis();
         Serial.println(N);
-        Serial.println(fin-debut);
+        Serial.println(fin_unroll-debut_unroll);
         treuilUnrollManual(N, 1, SIGLSTreuil, 1, HC12, HC12String);
         returnMessage(HC12, 1);
         break;
@@ -441,6 +441,6 @@ void pulse() {
 
 void Resetfct()
 {
-    digitalWrite(ResetPin, LOW);
+    digitalWrite(RESET, LOW);
 
 }
