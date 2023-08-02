@@ -62,7 +62,7 @@ String HC12String;
 int D = 0;
 int N = 1;
 
-float target_nbTurns = 5; // Variable used to store a target number of winch turns to be used with PID
+float defaultNbTurns = 5; // Variable used to store a target number of winch turns to be used with PID
 float freq = 0; // Flow meter frequence variable
 float flow = 0; // Flow meter flow rate variable
 
@@ -168,12 +168,12 @@ void loop()
         break;
 
       case TREUIL_UNROLL_CMD:
-        treuilUnroll(1, SIGLSTreuil, HC12, HC12String);
+        treuilUnroll(defaultNbTurns, myPID, encTreuil, SIGLSTreuil, HC12, HC12String);
         returnMessage(HC12, 1);
         break;
 
       case TREUIL_ROLL_CMD:
-        treuilRoll(1, SIGLSTreuil, HC12, HC12String);
+        treuilRoll(defaultNbTurns, myPID, encTreuil, SIGLSTreuil, HC12, HC12String);
         Serial.println(stop_loop);
         returnMessage(HC12, 1);
         break;
