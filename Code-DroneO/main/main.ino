@@ -21,8 +21,9 @@
 
 const int ENCFBB        = 2;  // FB_B
 const int ENCFBA        = 3;  // FB_A
-const int PHTreuil      = 4;  // PH_TREUIL (direction)
-const int ENTreuil      = 5;  // EN_TREUIL (pwm)
+// Both threuil variables declared in variables.cpp
+//const int PHTreuil    = 4;  // PH_TREUIL (direction)
+//const int ENTreuil    = 5;  // EN_TREUIL (pwm)
 const int SIGFlSensor   = 7;  // SIG_FL_SENSOR
 const int STPEn         = 8;  // STP_EN
 const int STPStep       = 9;  // STP_STEP
@@ -31,7 +32,7 @@ const int HC12TXD       = 11;
 const int HC12RXD       = 12;
 const int PWMPompe      = 13; // PWM_POMPE
 const int JOGPlateau    = 14;
-const int ResetPin      = 15;
+const int RESET         = 15;
 const int SVBout        = 16; // SV_BOUT
 const int SVPurg        = 17; // SV_PURG
 const int CSTreuil      = 18; // CSelect Treuil
@@ -65,13 +66,13 @@ int D = 0;
 int N = 1;
 
 float target_nbTurns = 5; // Variable used to store a target number of winch turns to be used with PID
-float pulseByTurn = 2398.31; // Number of pulses by turn of the winch (treuil)
 float freq = 0; // Flow meter frequence variable
 float flow = 0; // Flow meter flow rate variable
 
-long positionEncTreuil  = -999; // Gives a value to encoder variable
-
-double Setpoint, Input, Output; // PID variables
+// Declared in variables.cpp
+//long positionEncTreuil  = -999; // Gives a value to encoder variable
+//double Setpoint, Input, Output; // PID variables
+//float pulseByTurn = 2398.31; // Number of pulses by turn of the winch (treuil)
 double Kp=0.5, Ki=0.1, Kd=0; // Put Kd at 0.1 if we want to slow down and arrive smoothly at target
 
 volatile int flowPulseCount = 0; // Volatile variables are better suited for use with interrupts
@@ -448,6 +449,6 @@ void pulse() {
 
 void Resetfct()
 {
-    digitalWrite(ResetPin, LOW);
+    digitalWrite(RESET, LOW);
 
 }

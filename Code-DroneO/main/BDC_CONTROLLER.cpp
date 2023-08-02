@@ -7,8 +7,9 @@
 #include "variables.hpp"
 
 //Need to be able to use PHTreuil, ENTreuil, Setpoint, Output, Input variables
-void prototypeFunction(PID &PIDObject, Encoder &EncoderObject, int hallSensor, SoftwareSerial &HC12object, String HC12String_)
+void prototypeFunction(int target_nbTurns, PID &PIDObject, Encoder &EncoderObject, int hallSensor, SoftwareSerial &HC12object, String HC12String_)
 {
+  Setpoint = target_nbTurns * pulseByTurn;
   long newEncTreuil;
   newEncTreuil = EncoderObject.read();
   Input = EncoderObject.read();
