@@ -61,7 +61,7 @@ void treuilRoll(int target_nbTurns, PID &PIDObject, Encoder &EncoderObject, int 
     }
   }
 
-  analogWrite(enTreuilPin, 0); // STOP MOTOR
+  analogWrite(ENTreuil, 0); // STOP MOTOR
 
   if (newEncTreuil != positionEncTreuil) 
   {
@@ -93,7 +93,7 @@ void treuilUnroll(int target_nbTurns, PID &PIDObject, Encoder &EncoderObject, in
     }
   }
 
-  analogWrite(enTreuilPin, 0); // STOP MOTOR
+  analogWrite(ENTreuil, 0); // STOP MOTOR
 
   if (newEncTreuil != positionEncTreuil) 
   {
