@@ -48,7 +48,7 @@ void treuilRoll(int target_nbTurns, PID &PIDObject, Encoder &EncoderObject, int 
   digitalWrite(PHTreuil, HIGH);
 
   while(newEncTreuil < Setpoint - 2) {
-    if(digitalRead(limitswitch) == HIGH || checkCommunication(HC12object, HC12String_)==100)
+    if(digitalRead(hallSensor) == HIGH || checkCommunication(HC12object, HC12String_)==100)
     {
       analogWrite(ENTreuil, 0);
       Serial.println("arret d'urgence");
@@ -80,7 +80,7 @@ void treuilUnroll(int target_nbTurns, PID &PIDObject, Encoder &EncoderObject, in
   digitalWrite(PHTreuil, LOW);
 
   while(newEncTreuil > Setpoint - 2) {
-    if(digitalRead(limitswitch) == HIGH || checkCommunication(HC12object, HC12String_)==100)
+    if(digitalRead(hallSensor) == HIGH || checkCommunication(HC12object, HC12String_)==100)
     {
       analogWrite(ENTreuil, 0);
       Serial.println("arret d'urgence");
