@@ -343,7 +343,7 @@ void remplissage (int wantedBottle, int duree)
 
 void commandeRemplissageManuel(int wantedBottle, int duree)
 {
-  treuilUnroll(1,SIGLSTreuil,HC12, HC12String);
+  treuilUnroll(defaultNbTurns, myPID, encTreuil, SIGLSTreuil, HC12, HC12String);
   if(stop_loop==true){return;}
   digitalWrite(STPEn,LOW); // Enable stepper motor control
   delay(1);
@@ -368,7 +368,8 @@ void commandeRemplissageManuel(int wantedBottle, int duree)
   valveIn(HC12, HC12String);
   if(stop_loop==true){return;}
   digitalWrite(STPEn,HIGH); // Disable stepper motor control
-  treuilRoll(1, SIGLSTreuil, HC12, HC12String);
+  treuilRoll(defaultNbTurns, myPID, encTreuil, SIGLSTreuil, HC12, HC12String);
+
 }
 
 void tournerPlateau(int wantedBottle)
