@@ -21,8 +21,9 @@
 
 const int ENCFBB        = 2;  // FB_B
 const int ENCFBA        = 3;  // FB_A
-const int PHTreuil      = 4;  // PH_TREUIL (direction)
-const int ENTreuil      = 5;  // EN_TREUIL (pwm)
+// Both threuil variables declared in variables.cpp
+//const int PHTreuil    = 4;  // PH_TREUIL (direction)
+//const int ENTreuil    = 5;  // EN_TREUIL (pwm)
 const int SIGFlSensor   = 7;  // SIG_FL_SENSOR
 const int STPEn         = 8;  // STP_EN
 const int STPStep       = 9;  // STP_STEP
@@ -61,14 +62,14 @@ String HC12String;
 int D = 0;
 int N = 1;
 
-float target_nbTurns = 5; // Variable used to store a target number of winch turns to be used with PID
-float pulseByTurn = 2398.31; // Number of pulses by turn of the winch (treuil)
+float defaultNbTurns = 5; // Variable used to store a target number of winch turns to be used with PID
 float freq = 0; // Flow meter frequence variable
 float flow = 0; // Flow meter flow rate variable
 
-long positionEncTreuil  = -999; // Gives a value to encoder variable
-
-double Setpoint, Input, Output; // PID variables
+// Declared in variables.cpp
+//long positionEncTreuil  = -999; // Gives a value to encoder variable
+//double Setpoint, Input, Output; // PID variables
+//float pulseByTurn = 2398.31; // Number of pulses by turn of the winch (treuil)
 double Kp=0.5, Ki=0.1, Kd=0; // Put Kd at 0.1 if we want to slow down and arrive smoothly at target
 
 volatile int flowPulseCount = 0; // Volatile variables are better suited for use with interrupts
@@ -167,12 +168,12 @@ void loop()
         break;
 
       case TREUIL_UNROLL_CMD:
-        treuilUnroll(1, SIGLSTreuil, HC12, HC12String);
+        treuilUnroll(defaultNbTurns, myPID, encTreuil, SIGLSTreuil, HC12, HC12String);
         returnMessage(HC12, 1);
         break;
 
       case TREUIL_ROLL_CMD:
-        treuilRoll(1, SIGLSTreuil, HC12, HC12String);
+        treuilRoll(defaultNbTurns, myPID, encTreuil, SIGLSTreuil, HC12, HC12String);
         Serial.println(stop_loop);
         returnMessage(HC12, 1);
         break;
@@ -342,7 +343,7 @@ void remplissage (int wantedBottle, int duree)
 
 void commandeRemplissageManuel(int wantedBottle, int duree)
 {
-  treuilUnroll(1,SIGLSTreuil,HC12, HC12String);
+  treuilUnroll(defaultNbTurns, myPID, encTreuil, SIGLSTreuil, HC12, HC12String);
   if(stop_loop==true){return;}
   digitalWrite(STPEn,LOW); // Enable stepper motor control
   delay(1);
@@ -367,7 +368,8 @@ void commandeRemplissageManuel(int wantedBottle, int duree)
   valveIn(HC12, HC12String);
   if(stop_loop==true){return;}
   digitalWrite(STPEn,HIGH); // Disable stepper motor control
-  treuilRoll(1, SIGLSTreuil, HC12, HC12String);
+  treuilRoll(defaultNbTurns, myPID, encTreuil, SIGLSTreuil, HC12, HC12String);
+
 }
 
 void tournerPlateau(int wantedBottle)
