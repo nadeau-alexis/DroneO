@@ -43,14 +43,17 @@ void treuilRoll(int target_nbTurns, PID &PIDObject, Encoder &EncoderObject, int 
   Setpoint = target_nbTurns * pulseByTurn;
   long newEncTreuil;
   newEncTreuil = EncoderObject.read();
-  Input = EncoderObject.read();
-  PIDObject.Compute();
   digitalWrite(PHTreuil, HIGH);
 
-  while(newEncTreuil < Setpoint - 2) {
+  while(newEncTreuil < Setpoint - 2) 
+  {
+    newEncTreuil = EncoderObject.read();
+    Input = EncoderObject.read();
+    PIDObject.Compute();
     if(digitalRead(hallSensor) == HIGH || checkCommunication(HC12object, HC12String_)==100)
     {
       analogWrite(ENTreuil, 0);
+      positionEncTreuil = newEncTreuil;
       Serial.println("arret d'urgence");
       stop_loop=true;
       return;
@@ -75,14 +78,17 @@ void treuilUnroll(int target_nbTurns, PID &PIDObject, Encoder &EncoderObject, in
   Setpoint = target_nbTurns * pulseByTurn;
   long newEncTreuil;
   newEncTreuil = EncoderObject.read();
-  Input = EncoderObject.read();
-  PIDObject.Compute();
   digitalWrite(PHTreuil, LOW);
 
-  while(newEncTreuil > Setpoint - 2) {
+  while(newEncTreuil > Setpoint - 2) 
+  {
+    newEncTreuil = EncoderObject.read();
+    Input = EncoderObject.read();
+    PIDObject.Compute();
     if(digitalRead(hallSensor) == HIGH || checkCommunication(HC12object, HC12String_)==100)
     {
       analogWrite(ENTreuil, 0);
+      positionEncTreuil = newEncTreuil;
       Serial.println("arret d'urgence");
       stop_loop=true;
       return;
