@@ -84,7 +84,7 @@ void treuilUnroll(int target_nbTurns, PID &PIDObject, Encoder &EncoderObject, in
 
 }
 
-void emergencyRoll(PID &PIDObject, Encoder &EncoderObject, SoftwareSerial &HC12object, String HC12String_)
+void emergencyRoll(PID &PIDObject, Encoder &EncoderObject, int hallSensor, SoftwareSerial &HC12object, String HC12String_)
 {
   Setpoint = 2 * pulseByTurn;
   long newEncTreuil;
