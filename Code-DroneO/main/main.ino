@@ -62,7 +62,7 @@ String HC12String;
 int D = 0;
 int N = 1;
 
-float defaultNbTurns = 5; // Variable used to store a target number of winch turns to be used with PID
+float defaultNbTurns = 14.5; // Variable used to store a target number of winch turns to be used with PID
 float freq = 0; // Flow meter frequence variable
 float flow = 0; // Flow meter flow rate variable
 
