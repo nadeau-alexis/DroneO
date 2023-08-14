@@ -153,10 +153,12 @@ void loop()
     returnMessage(HC12, 1);
     Resetfct();
   }
-          
+  else if(digitalRead(CSTreuil) >= 2.1)
+  {
+    stop_loop = true;
+  }          
   else if(stop_loop==false)
   {
-
     switch (askedCommand){
       // Manual filling for bottles 1 to 6
       case 1: case 2: case 3: case 4: case 5: case 6:
@@ -169,12 +171,12 @@ void loop()
         break;
 
       case TREUIL_UNROLL_CMD:
-        treuilUnroll(defaultNbTurns, myPID, encTreuil, SIGLSTreuil, HC12, HC12String);
+        treuilUnroll(defaultNbTurns, myPID, encTreuil, CSTreuil, SIGLSTreuil, HC12, HC12String);
         returnMessage(HC12, 1);
         break;
 
       case TREUIL_ROLL_CMD:
-        treuilRoll(defaultNbTurns, myPID, encTreuil, SIGLSTreuil, HC12, HC12String);
+        treuilRoll(defaultNbTurns, myPID, encTreuil, CSTreuil, SIGLSTreuil, HC12, HC12String);
         Serial.println(stop_loop);
         returnMessage(HC12, 1);
         break;
@@ -334,7 +336,7 @@ void remplissage (int wantedBottle, int duree)
 
 void commandeRemplissageManuel(int wantedBottle, int duree)
 {
-  treuilUnroll(defaultNbTurns, myPID, encTreuil, SIGLSTreuil, HC12, HC12String);
+  treuilUnroll(defaultNbTurns, myPID, encTreuil, CSTreuil, SIGLSTreuil, HC12, HC12String);
   if(stop_loop==true){return;}
   digitalWrite(STPEn,LOW); // Enable stepper motor control
   delay(1);
@@ -359,7 +361,7 @@ void commandeRemplissageManuel(int wantedBottle, int duree)
   valveIn(HC12, HC12String);
   if(stop_loop==true){return;}
   digitalWrite(STPEn,HIGH); // Disable stepper motor control
-  treuilRoll(defaultNbTurns, myPID, encTreuil, SIGLSTreuil, HC12, HC12String);
+  treuilRoll(defaultNbTurns, myPID, encTreuil, CSTreuil, SIGLSTreuil, HC12, HC12String);
 
 }
 
