@@ -101,7 +101,8 @@ void setup()
   // --- Motors ---
   // Motor_1 TREUIL control pin initiate
   pinMode(PHTreuil, OUTPUT);     
-  pinMode(ENTreuil, OUTPUT);    
+  pinMode(ENTreuil, OUTPUT);
+  pinMode(CSTreuil, INPUT);    
 
   // VALVE pin initiate
   pinMode(SVBout, OUTPUT);
@@ -270,19 +271,9 @@ void loop()
         valvePurgeSansPompage();
         break;
       
-      default: 
-        if(digitalRead(JOGPlateau) == 0)
-        {
-          delay(5);
-          if(digitalRead(JOGPlateau) == 0) // PROTECTION AU BRUIT
-          {
-            digitalWrite(STPEn, LOW); // Enable stepper motor control
-            delay(1);
-            manualTurning(14, 15, 100, JOGPlateau);
-            digitalWrite(STPEn, HIGH); // Disable stepper motor control
-          }
-        }
-        break;
+//     default: 
+//        
+//        break;
     }
   }
 }
