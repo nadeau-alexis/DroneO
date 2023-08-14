@@ -6,38 +6,6 @@
 #include "HC12.hpp"
 #include "variables.hpp"
 
-// void prototypeFunction(int target_nbTurns, PID &PIDObject, Encoder &EncoderObject, int hallSensor, SoftwareSerial &HC12object, String HC12String_)
-// {
-//   Setpoint = target_nbTurns * pulseByTurn;
-//   long newEncTreuil;
-//   newEncTreuil = EncoderObject.read();
-//   Input = EncoderObject.read();
-//   PIDObject.Compute();
-  
-//   if (newEncTreuil < Setpoint - 2) {
-//     digitalWrite(PHTreuil, HIGH);
-//     analogWrite(ENTreuil, Output);
-//   }
-//   else if (newEncTreuil > Setpoint + 2) {
-//     digitalWrite(PHTreuil, LOW);
-//     analogWrite(ENTreuil, Output);
-//   }
-//   else {
-//     analogWrite(ENTreuil, 0);
-//   }
-
-//   if (newEncTreuil != positionEncTreuil) {
-//     positionEncTreuil = newEncTreuil;
-//   }
-
-//   Serial.print("Encoder = ");
-//   Serial.print(newEncTreuil);
-//   Serial.print(" / Output = ");
-//   Serial.print(Output);
-//   Serial.println();
-
-// }
-
 void treuilRoll(int target_nbTurns, PID &PIDObject, Encoder &EncoderObject, int hallSensor, SoftwareSerial &HC12object, String HC12String_)
 {
   Setpoint = target_nbTurns * pulseByTurn;
