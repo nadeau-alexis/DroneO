@@ -31,7 +31,7 @@ const int STPDir        = 10; // STP_DIR
 const int HC12TXD       = 11;
 const int HC12RXD       = 12;
 const int PWMPompe      = 13; // PWM_POMPE
-const int JOGPlateau    = 14;
+//const int JOGPlateau    = 14;
 const int RESET         = 15;
 const int SVBout        = 16; // SV_BOUT
 const int SVPurg        = 17; // SV_PURG
@@ -54,6 +54,7 @@ const int SIGLSTreuil   = 21; // SIG_LS_TREUIL
 #define PURGE_CMD             60
 #define RESET_CMD             70
 #define PURGE_NO_PUMP_CMD     80
+#define STOP_LOOP_CMD         100
 
 // ------- VARIABLES -------
 int position = 0;
@@ -127,13 +128,12 @@ void setup()
   // SWITCHES
   pinMode(SIGLSPlateau, INPUT); // SIG_LS_PLATEAU
   pinMode(SIGLSTreuil, INPUT);  // SIG_LS_TREUIL
-  pinMode(JOGPlateau, INPUT_PULLUP); 
+  //pinMode(JOGPlateau, INPUT_PULLUP); 
 
   // PREPARING MACHINE
   pumpOff(PWMPompe);
-  valveIn(HC12, HC12String);
   delay(500);
-  valvePurgeIn(SVPurg, SVBout);
+  valveBoutActivate(SVPurg, SVBout);
   delay(4000);
 
   Serial.println("INITIALISATION");
@@ -273,6 +273,7 @@ void loop()
         valvePurgeSansPompage();
         break;
       
+      // Add a default behavior here if needed     
 //     default: 
 //        
 //        break;
@@ -280,7 +281,7 @@ void loop()
   }
 }
 
-// ----------- FONCTION--------------
+// ----------- FUNCTIONS--------------
 
 void pompage(int duree)
 {
@@ -293,7 +294,7 @@ void pompage(int duree)
     {
       d=checkCommunication(HC12, HC12String);
       Serial.println(d);
-      if(d==100)
+      if(d==STOP_LOOP_CMD)
       {
         pumpOff(PWMPompe);
         Serial.println("arret d'urgence");
@@ -306,33 +307,82 @@ void pompage(int duree)
       }
     }
     fin=millis();
-    Serial.println(fin-debut);
 
+}
+
+void pompage()
+{
+    float volume = 0;
+    int message  = 0; 
+    unsigned long startTime = micros()
+
+    while(volume < targetVolume - 100) 
+    {
+      message = checkCommunication(HC12, HC12String);
+      if(message == STOP_LOOP_CMD)
+      {
+        digitalWrite(PWMPompe, LOW);
+        Serial.println("arret d'urgence");
+        stop_loop=true;
+        return;
+      }
+      else
+      {
+        analogWrite(PWMPompe, 255);
+        volume = flowMeter(startTime, volume);
+      }
+    }
+
+    while(volume <= targetVolume - 5)
+    {
+      message = checkCommunication(HC12, HC12String);
+      if(message == STOP_LOOP_CMD)
+      {
+        digitalWrite(PWMPompe, LOW);
+        Serial.println("arret d'urgence");
+        stop_loop=true;
+        return;
+      }
+      else
+      {
+        analogWrite(PWMPompe, 100);
+        volume = flowMeter(startTime, volume);
+      }
+    }
+
+    digitalWrite(PWMPompe, LOW); // Stop pump
+
+}
+
+float flowMeter(unsigned long startTime, float volume)
+{
+    unsigned long interval;
+    float freq;
+    float flow; 
+    
+    currentMicros = micros(); //on enregistre le nombre de microsecondes depuis le début du programme
+    interval = currentMicros - previousMicros; //interval entre deux pulses (voir interrupt)
+    freq = 1.0/(float(interval)/1000000.0); //On calcule la fréquence
+    flow = freq/21.0; //On calcule le débit à partir de la formule fournie par la datasheet du débitmètre
+    volume += flow * (currentMicros - startTime) / 60000000.0; // flow in L/min multiplied by time pumping
+    
+    return volume;
+    
 }
  
 void remplissage (int wantedBottle, int duree)
 {
   digitalWrite(STPEn, LOW); // Enable stepper motor control
-  delay(1);
-  //PURGE
-  //valvePurge();
   Serial.println(positionPlateau);
-
-  // REMPLISSAGE
-  //homing(&position, STPDir, STPStep, SIGLSPlateau,STPEn, HC12, HC12String);
-  if(stop_loop==true){return;}
-  delay(50);
   takePosition(&position, wantedBottle, STPDir, STPStep, STPEn, HC12, HC12String);
   if(stop_loop==true){return;}
-  valveOut(HC12, HC12String);
-  if(stop_loop==true){return;}
+  valveBout(SVPurg, SVBout);
   pompage(duree);
   if(stop_loop==true){return;}
-  valveIn(HC12, HC12String);
+  valvePurgeActivate(SVPurg, SVBout);
 
-  digitalWrite(STPEn,HIGH); // Disable stepper motor control
+  digitalWrite(STPEn, HIGH); // Disable stepper motor control
 }
-
 
 void commandeRemplissageManuel(int wantedBottle, int duree)
 {
@@ -340,7 +390,7 @@ void commandeRemplissageManuel(int wantedBottle, int duree)
   if(stop_loop==true){return;}
   digitalWrite(STPEn,LOW); // Enable stepper motor control
   delay(1);
- // homing(&position, STPDir, STPStep, SIGLSPlateau, STPEn,  HC12, HC12String);
+  //homing(&position, STPDir, STPStep, SIGLSPlateau, STPEn,  HC12, HC12String);
   if(stop_loop==true){return;}
   delay(50);
 
@@ -378,7 +428,6 @@ void tournerPlateau(int wantedBottle)
   Serial.println(positionPlateau);
 }
 
-
 void tournerPlateauPurge()
 {
   digitalWrite(STPEn, LOW); // Enable stepper motor control
@@ -389,31 +438,29 @@ void tournerPlateauPurge()
   takePurgePosition(&position, STPDir, STPStep, STPEn, HC12, HC12String);
 }
 
-
 void valvePurge()
 {
   takePurgePosition(&position, STPDir, STPStep, STPEn, HC12, HC12String);
   if(stop_loop==true){return;}
-  valvePurgeOut(SVPurg, SVBout);
+  valvePurgeActivate(SVPurg, SVBout);
   delay(4000);
   valveOut(HC12, HC12String);
   if(stop_loop==true){return;}
   pompage(8);
   if(stop_loop==true){return;}
-  valveIn(HC12, HC12String);
+  valve(HC12, HC12String);
   if(stop_loop==true){return;}
   delay(500);
-  valvePurgeIn(SVPurg, SVBout);
+  valveBoutActivate(SVPurg, SVBout);
   delay(4000);
 }
-
 
 void valvePurgeSansPompage()
 {
   digitalWrite(STPEn,LOW); // Enable stepper motor control
   takePurgePosition(&position, STPDir, STPStep, STPEn, HC12, HC12String);
   if(stop_loop==true){return;}
-  valvePurgeOut(SVPurg, SVBout);
+  valvePurgeActivate(SVPurg, SVBout);
   delay(4000);
   valveOut(HC12, HC12String);
   if(stop_loop==true){return;}
@@ -422,17 +469,16 @@ void valvePurgeSansPompage()
   valveIn(HC12, HC12String);
   if(stop_loop==true){return;}
   delay(500);
-  valvePurgeIn(SVPurg, SVBout);
+  valveBoutActivate(SVPurg, SVBout);
   delay(4000);
 
 }
 
-//ISR pour le débimètre:
+//ISR for flowmeter
 void pulse() {
   flowPulseCount++;
   previousMicros = currentMicros; // Update time since last pulse
 }
-
 
 void Resetfct()
 {
