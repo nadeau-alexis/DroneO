@@ -7,6 +7,7 @@ long positionEncTreuil = -999;
 double Setpoint, Input, Output; // PID variables
 const int PHTreuil = 4;
 const int ENTreuil = 5;
+const int CSTreuil = 18;
 const float pulseByTurn = 2398.31; // Number of pulses by turn of the winch (treuil)
 
 void printGlobal() {

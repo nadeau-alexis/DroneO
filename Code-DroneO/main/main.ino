@@ -35,7 +35,8 @@ const int PWMPompe      = 13; // PWM_POMPE
 const int RESET         = 15;
 const int SVBout        = 16; // SV_BOUT
 const int SVPurg        = 17; // SV_PURG
-const int CSTreuil      = 18; // Current Sense Treuil
+// Declared in variables.cpp
+//const int CSTreuil      = 18; // Current Sense Treuil
 const int STPFault      = 19; // Fault Plateau
 const int SIGLSPlateau  = 20; // SIG_LS_PLATEAU
 const int SIGLSTreuil   = 21; // SIG_LS_TREUIL
@@ -171,12 +172,12 @@ void loop()
         break;
 
       case TREUIL_UNROLL_CMD:
-        treuilUnroll(defaultNbTurns, myPID, encTreuil, CSTreuil, SIGLSTreuil, HC12, HC12String);
+        treuilUnroll(defaultNbTurns, myPID, encTreuil, SIGLSTreuil, HC12, HC12String);
         returnMessage(HC12, 1);
         break;
 
       case TREUIL_ROLL_CMD:
-        treuilRoll(defaultNbTurns, myPID, encTreuil, CSTreuil, SIGLSTreuil, HC12, HC12String);
+        treuilRoll(defaultNbTurns, myPID, encTreuil, SIGLSTreuil, HC12, HC12String);
         Serial.println(stop_loop);
         returnMessage(HC12, 1);
         break;
@@ -386,7 +387,7 @@ void remplissage (int wantedBottle, int duree)
 
 void commandeRemplissageManuel(int wantedBottle, int duree)
 {
-  treuilUnroll(defaultNbTurns, myPID, encTreuil, CSTreuil, SIGLSTreuil, HC12, HC12String);
+  treuilUnroll(defaultNbTurns, myPID, encTreuil, SIGLSTreuil, HC12, HC12String);
   if(stop_loop==true){return;}
   digitalWrite(STPEn,LOW); // Enable stepper motor control
   delay(1);
@@ -411,7 +412,7 @@ void commandeRemplissageManuel(int wantedBottle, int duree)
   valveIn(HC12, HC12String);
   if(stop_loop==true){return;}
   digitalWrite(STPEn,HIGH); // Disable stepper motor control
-  treuilRoll(defaultNbTurns, myPID, encTreuil, CSTreuil, SIGLSTreuil, HC12, HC12String);
+  treuilRoll(defaultNbTurns, myPID, encTreuil, SIGLSTreuil, HC12, HC12String);
 
 }
 

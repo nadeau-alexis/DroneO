@@ -45,7 +45,7 @@ void treuilRoll(int target_nbTurns, PID &PIDObject, Encoder &EncoderObject, int 
 
 }
 
-void treuilUnroll(int target_nbTurns, PID &PIDObject, Encoder &EncoderObject, int hallSensor, int CSTreuil, SoftwareSerial &HC12object, String HC12String_)
+void treuilUnroll(int target_nbTurns, PID &PIDObject, Encoder &EncoderObject, int hallSensor, SoftwareSerial &HC12object, String HC12String_)
 {
   Setpoint = target_nbTurns * pulseByTurn;
   long newEncTreuil;
