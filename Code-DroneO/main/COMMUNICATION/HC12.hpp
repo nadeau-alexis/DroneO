@@ -7,10 +7,4 @@
 int checkCommunication(SoftwareSerial &HC12object, String HC12String_);
 void returnMessage(SoftwareSerial &HC12object, int returnMessageNumber);
 
-/*
-void treuilUnroll(int speed);
-void treuilRoll(int speed);
-void valveIn(void);
-void valveOut(void);
-*/
 #endif

@@ -405,11 +405,11 @@ void commandeRemplissageManuel(int wantedBottle, int duree)
   Serial.println(positionPlateau);
 
   if(stop_loop==true){return;}
-  valveOut(HC12, HC12String);
+  //valveOut(HC12, HC12String);
   if(stop_loop==true){return;}
   pompage(duree);
   if(stop_loop==true){return;}
-  valveIn(HC12, HC12String);
+  //valveIn(HC12, HC12String);
   if(stop_loop==true){return;}
   digitalWrite(STPEn,HIGH); // Disable stepper motor control
   treuilRoll(defaultNbTurns, myPID, encTreuil, SIGLSTreuil, HC12, HC12String);
@@ -445,11 +445,11 @@ void valvePurge()
   if(stop_loop==true){return;}
   valvePurgeActivate(SVPurg, SVBout);
   delay(4000);
-  valveOut(HC12, HC12String);
+  //valveOut(HC12, HC12String);
   if(stop_loop==true){return;}
   pompage(8);
   if(stop_loop==true){return;}
-  valve(HC12, HC12String);
+  //valve(HC12, HC12String);
   if(stop_loop==true){return;}
   delay(500);
   valveBoutActivate(SVPurg, SVBout);
@@ -463,11 +463,11 @@ void valvePurgeSansPompage()
   if(stop_loop==true){return;}
   valvePurgeActivate(SVPurg, SVBout);
   delay(4000);
-  valveOut(HC12, HC12String);
+  //valveOut(HC12, HC12String);
   if(stop_loop==true){return;}
   delay(5000);
   if(stop_loop==true){return;}
-  valveIn(HC12, HC12String);
+  //valveIn(HC12, HC12String);
   if(stop_loop==true){return;}
   delay(500);
   valveBoutActivate(SVPurg, SVBout);
