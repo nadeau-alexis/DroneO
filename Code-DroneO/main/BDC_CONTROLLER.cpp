@@ -20,7 +20,7 @@ void treuilRoll(int target_nbTurns, PID &PIDObject, Encoder &EncoderObject, int 
     PIDObject.Compute();
     if(digitalRead(CSTreuil) >= 2.1)
     {
-      emergencyUnroll(PIDObject, EncoderObject, hallSensor, HC12object, HC12String_)
+      emergencyUnroll(PIDObject, EncoderObject, hallSensor, HC12object, HC12String_);
     }
     else if(digitalRead(hallSensor) == HIGH || checkCommunication(HC12object, HC12String_)==100)
     {
@@ -59,7 +59,7 @@ void treuilUnroll(int target_nbTurns, PID &PIDObject, Encoder &EncoderObject, in
     PIDObject.Compute();
     if(digitalRead(CSTreuil) >= 2.1)
     {
-      emergencyRoll(PIDObject, EncoderObject, hallSensor, HC12object, HC12String_)
+      emergencyRoll(PIDObject, EncoderObject, hallSensor, HC12object, HC12String_);
     }
     else if(digitalRead(hallSensor) == HIGH || checkCommunication(HC12object, HC12String_)==100)
     {
