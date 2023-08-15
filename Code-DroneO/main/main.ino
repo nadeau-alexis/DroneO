@@ -316,7 +316,7 @@ void pompage(float targetVolume)
 {
     float volume = 0;
     int message  = 0; 
-    unsigned long startTime = micros()
+    unsigned long startTime = micros();
 
     // First filling phase where we want to fill the bottle at max speed (255 pwm)
     while(volume < targetVolume - 100) 
