@@ -377,7 +377,7 @@ void remplissage (int wantedBottle, int duree)
   Serial.println(positionPlateau);
   takePosition(&position, wantedBottle, STPDir, STPStep, STPEn, HC12, HC12String);
   if(stop_loop==true){return;}
-  valveBout(SVPurg, SVBout);
+  valveBoutActivate(SVPurg, SVBout);
   pompage(duree);
   if(stop_loop==true){return;}
   valvePurgeActivate(SVPurg, SVBout);
