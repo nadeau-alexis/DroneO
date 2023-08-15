@@ -64,7 +64,9 @@ String HC12String;
 int D = 0;
 int N = 1;
 
-float defaultNbTurns = 14.5; // Variable used to store a target number of winch turns to be used with PID
+float defaultNbTurns     = 14.5; // Variable used to store a target number of winch turns to be used with PID
+float defaultFillVolume  = 500;  // Variable used to store default volume (ml) we want to fill bottles with
+float defaultPurgeVolume = 250;  // Variable used to store default volume of water (ml) we want to purge 
 float freq = 0; // Flow meter frequence variable
 float flow = 0; // Flow meter flow rate variable
 
@@ -225,11 +227,8 @@ void loop()
       // Fill bottles 1 to 6
       case 21: case 22: case 23: case 24: case 25: case 26:
         Serial.println(askedCommand);
-        delay(2000);
-        D = checkCommunication(HC12, HC12String);
-        remplissage(askedCommand-20, D);
+        remplissage(askedCommand-20, defaultFillVolume);
         returnMessage(HC12, 1);
-        D = 0;
         break;
 
       // Turn tray to bottle position 1 to 6
@@ -284,39 +283,42 @@ void loop()
 
 // ----------- FUNCTIONS--------------
 
-void pompage(int duree)
-{
-  int debut;
-  int fin;
-  int d=0;
-    pumpOn(PWMPompe);
-    debut=millis();
-    for (int i=0; i<5;i++)
-    {
-      d=checkCommunication(HC12, HC12String);
-      Serial.println(d);
-      if(d==STOP_LOOP_CMD)
-      {
-        pumpOff(PWMPompe);
-        Serial.println("arret d'urgence");
-        stop_loop=true;
-        return;
-      }
-      else
-      {    
-       delay(1000); 
-      }
-    }
-    fin=millis();
+// Old pompage function based on pump duration
+// void pompage(int duree)
+// {
+//   int debut;
+//   int fin;
+//   int d=0;
+//     pumpOn(PWMPompe);
+//     debut=millis();
+//     for (int i=0; i<5;i++)
+//     {
+//       d=checkCommunication(HC12, HC12String);
+//       Serial.println(d);
+//       if(d==STOP_LOOP_CMD)
+//       {
+//         pumpOff(PWMPompe);
+//         Serial.println("arret d'urgence");
+//         stop_loop=true;
+//         return;
+//       }
+//       else
+//       {    
+//        delay(1000); 
+//       }
+//     }
+//     fin=millis();
 
-}
+// }
 
-void pompage()
+// Pumping function based on targetVolume with flow sensor calculations
+void pompage(float targetVolume)
 {
     float volume = 0;
     int message  = 0; 
     unsigned long startTime = micros()
 
+    // First filling phase where we want to fill the bottle at max speed (255 pwm)
     while(volume < targetVolume - 100) 
     {
       message = checkCommunication(HC12, HC12String);
@@ -334,6 +336,7 @@ void pompage()
       }
     }
 
+    // Second fillingphase  where we go slower, as seen by pwm command being lower (100)
     while(volume <= targetVolume - 5)
     {
       message = checkCommunication(HC12, HC12String);
@@ -371,21 +374,21 @@ float flowMeter(unsigned long startTime, float volume)
     
 }
  
-void remplissage (int wantedBottle, int duree)
+void remplissage (int wantedBottle, int targetVolume)
 {
   digitalWrite(STPEn, LOW); // Enable stepper motor control
   Serial.println(positionPlateau);
   takePosition(&position, wantedBottle, STPDir, STPStep, STPEn, HC12, HC12String);
   if(stop_loop==true){return;}
   valveBoutActivate(SVPurg, SVBout);
-  pompage(duree);
+  pompage(targetVolume);
   if(stop_loop==true){return;}
   valvePurgeActivate(SVPurg, SVBout);
 
   digitalWrite(STPEn, HIGH); // Disable stepper motor control
 }
 
-void commandeRemplissageManuel(int wantedBottle, int duree)
+void commandeRemplissageManuel(int wantedBottle, int targetVolume)
 {
   treuilUnroll(defaultNbTurns, myPID, encTreuil, SIGLSTreuil, HC12, HC12String);
   if(stop_loop==true){return;}
@@ -407,7 +410,7 @@ void commandeRemplissageManuel(int wantedBottle, int duree)
   if(stop_loop==true){return;}
   //valveOut(HC12, HC12String);
   if(stop_loop==true){return;}
-  pompage(duree);
+  pompage(targetVolume);
   if(stop_loop==true){return;}
   //valveIn(HC12, HC12String);
   if(stop_loop==true){return;}
@@ -447,9 +450,9 @@ void valvePurge()
   delay(4000);
   //valveOut(HC12, HC12String);
   if(stop_loop==true){return;}
-  pompage(8);
+  pompage(defaultPurgeVolume);
   if(stop_loop==true){return;}
-  //valve(HC12, HC12String);
+  //valveIn(HC12, HC12String);
   if(stop_loop==true){return;}
   delay(500);
   valveBoutActivate(SVPurg, SVBout);
