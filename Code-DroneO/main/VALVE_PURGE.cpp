@@ -1,13 +1,13 @@
 #include "VALVE_PURGE.hpp"
 #include <Arduino.h>
 
-void valvePurgeOut(int SVPurg_, int SVBout_)
+void valvePurgeActivate(int SVPurg_, int SVBout_)
 {
     digitalWrite(SVPurg_, HIGH);
 	  digitalWrite(SVBout_, LOW);
 }
 
-void valvePurgeIn(int SVPurg_, int SVBout_)
+void valveBoutActivate(int SVPurg_, int SVBout_)
 {
     digitalWrite(SVPurg_, LOW);
 	  digitalWrite(SVBout_, HIGH);
