@@ -40,6 +40,8 @@ const int SVPurg        = 17; // SV_PURG
 const int STPFault      = 19; // Fault Plateau
 const int SIGLSPlateau  = 20; // SIG_LS_PLATEAU
 const int SIGLSTreuil   = 21; // SIG_LS_TREUIL
+const int commLedPin    = 22; // Led d'état (comm et power)
+const int faultLedPin   = 23; // Led d'erreur
 
 
 // ------- COMMAND NAMES -------
@@ -123,7 +125,8 @@ void setup()
   pinMode(PWMPompe, OUTPUT);
  
   // --- LED ---
-  pinMode(LED_BUILTIN, OUTPUT);
+  pinMode(commLedPin, OUTPUT);
+  pinMode(faultLedPin, OUTPUT);
 
   // FLOW METER
   attachInterrupt(digitalPinToInterrupt(SIGFlSensor), pulse, RISING);
@@ -368,7 +371,8 @@ float flowMeter(unsigned long startTime, float volume)
     interval = currentMicros - previousMicros; //interval entre deux pulses (voir interrupt)
     freq = 1.0/(float(interval)/1000000.0); //On calcule la fréquence
     flow = freq/21.0; //On calcule le débit à partir de la formule fournie par la datasheet du débitmètre
-    volume += flow * (currentMicros - startTime) / 60000000.0; // flow in L/min multiplied by time pumping
+    volume += flowPulseCount * 0.7246; // 0.7246 est le nombre de ml par pulse, donc nombre de ml/pulse * nombre de pulse donne volume
+    //volume += flow * (currentMicros - startTime) / 60000000.0; // flow in L/min multiplied by time pumping
     
     return volume;
     
