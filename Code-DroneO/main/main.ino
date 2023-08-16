@@ -31,14 +31,17 @@ const int STPDir        = 10; // STP_DIR
 const int HC12TXD       = 11;
 const int HC12RXD       = 12;
 const int PWMPompe      = 13; // PWM_POMPE
-const int JOGPlateau    = 14;
+//const int JOGPlateau    = 14;
 const int RESET         = 15;
 const int SVBout        = 16; // SV_BOUT
 const int SVPurg        = 17; // SV_PURG
-const int CSTreuil      = 18; // CSelect Treuil
+// Declared in variables.cpp
+//const int CSTreuil      = 18; // Current Sense Treuil
 const int STPFault      = 19; // Fault Plateau
 const int SIGLSPlateau  = 20; // SIG_LS_PLATEAU
 const int SIGLSTreuil   = 21; // SIG_LS_TREUIL
+const int commLedPin    = 22; // Led d'état (comm et power)
+const int faultLedPin   = 23; // Led d'erreur
 
 
 // ------- COMMAND NAMES -------
@@ -54,6 +57,7 @@ const int SIGLSTreuil   = 21; // SIG_LS_TREUIL
 #define PURGE_CMD             60
 #define RESET_CMD             70
 #define PURGE_NO_PUMP_CMD     80
+#define STOP_LOOP_CMD         100
 
 // ------- VARIABLES -------
 int position = 0;
@@ -62,7 +66,9 @@ String HC12String;
 int D = 0;
 int N = 1;
 
-float defaultNbTurns = 5; // Variable used to store a target number of winch turns to be used with PID
+float defaultNbTurns     = 14.5; // Variable used to store a target number of winch turns to be used with PID
+float defaultFillVolume  = 500;  // Variable used to store default volume (ml) we want to fill bottles with
+float defaultPurgeVolume = 250;  // Variable used to store default volume of water (ml) we want to purge 
 float freq = 0; // Flow meter frequence variable
 float flow = 0; // Flow meter flow rate variable
 
@@ -101,7 +107,8 @@ void setup()
   // --- Motors ---
   // Motor_1 TREUIL control pin initiate
   pinMode(PHTreuil, OUTPUT);     
-  pinMode(ENTreuil, OUTPUT);    
+  pinMode(ENTreuil, OUTPUT);
+  pinMode(CSTreuil, INPUT);    
 
   // VALVE pin initiate
   pinMode(SVBout, OUTPUT);
@@ -118,7 +125,8 @@ void setup()
   pinMode(PWMPompe, OUTPUT);
  
   // --- LED ---
-  pinMode(LED_BUILTIN, OUTPUT);
+  pinMode(commLedPin, OUTPUT);
+  pinMode(faultLedPin, OUTPUT);
 
   // FLOW METER
   attachInterrupt(digitalPinToInterrupt(SIGFlSensor), pulse, RISING);
@@ -126,13 +134,12 @@ void setup()
   // SWITCHES
   pinMode(SIGLSPlateau, INPUT); // SIG_LS_PLATEAU
   pinMode(SIGLSTreuil, INPUT);  // SIG_LS_TREUIL
-  pinMode(JOGPlateau, INPUT_PULLUP); 
+  //pinMode(JOGPlateau, INPUT_PULLUP); 
 
   // PREPARING MACHINE
   pumpOff(PWMPompe);
-  valveIn(HC12, HC12String);
   delay(500);
-  valvePurgeIn(SVPurg, SVBout);
+  valveBoutActivate(SVPurg, SVBout);
   delay(4000);
 
   Serial.println("INITIALISATION");
@@ -152,10 +159,12 @@ void loop()
     returnMessage(HC12, 1);
     Resetfct();
   }
-          
+  else if(digitalRead(CSTreuil) >= 2.1)
+  {
+    stop_loop = true;
+  }          
   else if(stop_loop==false)
   {
-
     switch (askedCommand){
       // Manual filling for bottles 1 to 6
       case 1: case 2: case 3: case 4: case 5: case 6:
@@ -221,11 +230,8 @@ void loop()
       // Fill bottles 1 to 6
       case 21: case 22: case 23: case 24: case 25: case 26:
         Serial.println(askedCommand);
-        delay(2000);
-        D = checkCommunication(HC12, HC12String);
-        remplissage(askedCommand-20, D);
+        remplissage(askedCommand-20, defaultFillVolume);
         returnMessage(HC12, 1);
-        D = 0;
         break;
 
       // Turn tray to bottle position 1 to 6
@@ -270,84 +276,129 @@ void loop()
         valvePurgeSansPompage();
         break;
       
-      default: 
-        if(digitalRead(JOGPlateau) == 0)
-        {
-          delay(5);
-          if(digitalRead(JOGPlateau) == 0) // PROTECTION AU BRUIT
-          {
-            digitalWrite(STPEn, LOW); // Enable stepper motor control
-            delay(1);
-            manualTurning(14, 15, 100, JOGPlateau);
-            digitalWrite(STPEn, HIGH); // Disable stepper motor control
-          }
-        }
-        break;
+      // Add a default behavior here if needed     
+//     default: 
+//        
+//        break;
     }
   }
 }
 
-// ----------- FONCTION--------------
+// ----------- FUNCTIONS--------------
 
-void pompage(int duree)
+// Old pompage function based on pump duration
+// void pompage(int duree)
+// {
+//   int debut;
+//   int fin;
+//   int d=0;
+//     pumpOn(PWMPompe);
+//     debut=millis();
+//     for (int i=0; i<5;i++)
+//     {
+//       d=checkCommunication(HC12, HC12String);
+//       Serial.println(d);
+//       if(d==STOP_LOOP_CMD)
+//       {
+//         pumpOff(PWMPompe);
+//         Serial.println("arret d'urgence");
+//         stop_loop=true;
+//         return;
+//       }
+//       else
+//       {    
+//        delay(1000); 
+//       }
+//     }
+//     fin=millis();
+
+// }
+
+// Pumping function based on targetVolume with flow sensor calculations
+void pompage(float targetVolume)
 {
-  int debut;
-  int fin;
-  int d=0;
-    pumpOn(PWMPompe);
-    debut=millis();
-    for (int i=0; i<5;i++)
+    float volume = 0;
+    int message  = 0; 
+    unsigned long startTime = micros();
+
+    // First filling phase where we want to fill the bottle at max speed (255 pwm)
+    while(volume < targetVolume - 100) 
     {
-      d=checkCommunication(HC12, HC12String);
-      Serial.println(d);
-      if(d==100)
+      message = checkCommunication(HC12, HC12String);
+      if(message == STOP_LOOP_CMD)
       {
-        pumpOff(PWMPompe);
+        digitalWrite(PWMPompe, LOW);
         Serial.println("arret d'urgence");
         stop_loop=true;
         return;
       }
       else
-      {    
-       delay(1000); 
+      {
+        analogWrite(PWMPompe, 255);
+        volume = flowMeter(startTime, volume);
       }
     }
-    fin=millis();
-    Serial.println(fin-debut);
 
+    // Second fillingphase  where we go slower, as seen by pwm command being lower (100)
+    while(volume <= targetVolume - 5)
+    {
+      message = checkCommunication(HC12, HC12String);
+      if(message == STOP_LOOP_CMD)
+      {
+        digitalWrite(PWMPompe, LOW);
+        Serial.println("arret d'urgence");
+        stop_loop=true;
+        return;
+      }
+      else
+      {
+        analogWrite(PWMPompe, 100);
+        volume = flowMeter(startTime, volume);
+      }
+    }
+
+    digitalWrite(PWMPompe, LOW); // Stop pump
+
+}
+
+float flowMeter(unsigned long startTime, float volume)
+{
+    unsigned long interval;
+    float freq;
+    float flow; 
+    
+    currentMicros = micros(); //on enregistre le nombre de microsecondes depuis le début du programme
+    interval = currentMicros - previousMicros; //interval entre deux pulses (voir interrupt)
+    freq = 1.0/(float(interval)/1000000.0); //On calcule la fréquence
+    flow = freq/21.0; //On calcule le débit à partir de la formule fournie par la datasheet du débitmètre
+    volume += flowPulseCount * 0.7246; // 0.7246 est le nombre de ml par pulse, donc nombre de ml/pulse * nombre de pulse donne volume
+    //volume += flow * (currentMicros - startTime) / 60000000.0; // flow in L/min multiplied by time pumping
+    
+    return volume;
+    
 }
  
-void remplissage (int wantedBottle, int duree)
+void remplissage (int wantedBottle, int targetVolume)
 {
   digitalWrite(STPEn, LOW); // Enable stepper motor control
-  delay(1);
-  //PURGE
-  //valvePurge();
   Serial.println(positionPlateau);
-
-  // REMPLISSAGE
-  //homing(&position, STPDir, STPStep, SIGLSPlateau,STPEn, HC12, HC12String);
-  if(stop_loop==true){return;}
-  delay(50);
   takePosition(&position, wantedBottle, STPDir, STPStep, STPEn, HC12, HC12String);
   if(stop_loop==true){return;}
-  valveOut(HC12, HC12String);
+  valveBoutActivate(SVPurg, SVBout);
+  pompage(targetVolume);
   if(stop_loop==true){return;}
-  pompage(duree);
-  if(stop_loop==true){return;}
-  valveIn(HC12, HC12String);
+  valvePurgeActivate(SVPurg, SVBout);
 
-  digitalWrite(STPEn,HIGH); // Disable stepper motor control
+  digitalWrite(STPEn, HIGH); // Disable stepper motor control
 }
 
-
-void commandeRemplissageManuel(int wantedBottle, int duree)
+void commandeRemplissageManuel(int wantedBottle, int targetVolume)
 {
   treuilUnroll(defaultNbTurns, myPID, encTreuil, SIGLSTreuil, HC12, HC12String);
   if(stop_loop==true){return;}
   digitalWrite(STPEn,LOW); // Enable stepper motor control
   delay(1);
- // homing(&position, STPDir, STPStep, SIGLSPlateau, STPEn,  HC12, HC12String);
+  //homing(&position, STPDir, STPStep, SIGLSPlateau, STPEn,  HC12, HC12String);
   if(stop_loop==true){return;}
   delay(50);
 
@@ -361,11 +412,11 @@ void commandeRemplissageManuel(int wantedBottle, int duree)
   Serial.println(positionPlateau);
 
   if(stop_loop==true){return;}
-  valveOut(HC12, HC12String);
+  //valveOut(HC12, HC12String);
   if(stop_loop==true){return;}
-  pompage(duree);
+  pompage(targetVolume);
   if(stop_loop==true){return;}
-  valveIn(HC12, HC12String);
+  //valveIn(HC12, HC12String);
   if(stop_loop==true){return;}
   digitalWrite(STPEn,HIGH); // Disable stepper motor control
   treuilRoll(defaultNbTurns, myPID, encTreuil, SIGLSTreuil, HC12, HC12String);
@@ -385,7 +436,6 @@ void tournerPlateau(int wantedBottle)
   Serial.println(positionPlateau);
 }
 
-
 void tournerPlateauPurge()
 {
   digitalWrite(STPEn, LOW); // Enable stepper motor control
@@ -396,50 +446,47 @@ void tournerPlateauPurge()
   takePurgePosition(&position, STPDir, STPStep, STPEn, HC12, HC12String);
 }
 
-
 void valvePurge()
 {
   takePurgePosition(&position, STPDir, STPStep, STPEn, HC12, HC12String);
   if(stop_loop==true){return;}
-  valvePurgeOut(SVPurg, SVBout);
+  valvePurgeActivate(SVPurg, SVBout);
   delay(4000);
-  valveOut(HC12, HC12String);
+  //valveOut(HC12, HC12String);
   if(stop_loop==true){return;}
-  pompage(8);
+  pompage(defaultPurgeVolume);
   if(stop_loop==true){return;}
-  valveIn(HC12, HC12String);
+  //valveIn(HC12, HC12String);
   if(stop_loop==true){return;}
   delay(500);
-  valvePurgeIn(SVPurg, SVBout);
+  valveBoutActivate(SVPurg, SVBout);
   delay(4000);
 }
-
 
 void valvePurgeSansPompage()
 {
   digitalWrite(STPEn,LOW); // Enable stepper motor control
   takePurgePosition(&position, STPDir, STPStep, STPEn, HC12, HC12String);
   if(stop_loop==true){return;}
-  valvePurgeOut(SVPurg, SVBout);
+  valvePurgeActivate(SVPurg, SVBout);
   delay(4000);
-  valveOut(HC12, HC12String);
+  //valveOut(HC12, HC12String);
   if(stop_loop==true){return;}
   delay(5000);
   if(stop_loop==true){return;}
-  valveIn(HC12, HC12String);
+  //valveIn(HC12, HC12String);
   if(stop_loop==true){return;}
   delay(500);
-  valvePurgeIn(SVPurg, SVBout);
+  valveBoutActivate(SVPurg, SVBout);
   delay(4000);
 
 }
 
-//ISR pour le débimètre:
+//ISR for flowmeter
 void pulse() {
   flowPulseCount++;
   previousMicros = currentMicros; // Update time since last pulse
 }
-
 
 void Resetfct()
 {
