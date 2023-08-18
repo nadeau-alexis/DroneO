@@ -96,10 +96,7 @@ void commandeRemplissageManuel(int wantedBottle, int duree);
 void remplissage (int wantedBottle, int duree);
 //--------------------------------
 void setup() 
-{
-  Serial.begin(9600);
-  HC12.begin(9600);
-  
+{ 
   pinMode(RESET, OUTPUT);
   digitalWrite(RESET, HIGH);
   delay(200); 
@@ -137,9 +134,11 @@ void setup()
   //pinMode(JOGPlateau, INPUT_PULLUP); 
 
   // PREPARING MACHINE
+  Serial.begin(9600);
+  HC12.begin(9600);
   pumpOff(PWMPompe);
   delay(500);
-  valveBoutActivate(SVPurg, SVBout);
+  valveDeactivate(SVPurg, SVBout);
   delay(4000);
 
   Serial.println("INITIALISATION");
@@ -165,7 +164,7 @@ void loop()
   }          
   else if(stop_loop==false)
   {
-    switch (askedCommand){
+    switch(askedCommand){
       // Manual filling for bottles 1 to 6
       case 1: case 2: case 3: case 4: case 5: case 6:
         Serial.println(askedCommand);
@@ -277,9 +276,13 @@ void loop()
         break;
       
       // Add a default behavior here if needed     
-//     default: 
-//        
-//        break;
+     default: 
+        // Flash red light for a sec and print askedcommand
+        digitalWrite(faultLedPin, HIGH);
+        delay(1000);
+        Serial.println(askedCommand);
+        digitalWrite(faultLedPin, LOW);
+        break;
     }
   }
 }
