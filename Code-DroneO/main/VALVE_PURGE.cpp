@@ -13,6 +13,12 @@ void valveBoutActivate(int SVPurg_, int SVBout_)
 	  digitalWrite(SVBout_, HIGH);
 }
 
+void valveDeactivate(int SVPurg_, int SVBout_)
+{
+    digitalWrite(SVPurg_, LOW);
+    digitalWrite(SVBout_, LOW);
+}
+
 // void valveIn(SoftwareSerial &HC12object, String HC12String_)
 // {
 //   digitalWrite(8, LOW);

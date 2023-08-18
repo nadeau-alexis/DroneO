@@ -13,7 +13,7 @@ void treuilRoll(int target_nbTurns, PID &PIDObject, Encoder &EncoderObject, int 
   newEncTreuil = EncoderObject.read();
   digitalWrite(PHTreuil, HIGH);
 
-  while(newEncTreuil < Setpoint - 2) 
+  while(newEncTreuil > Setpoint - 2) 
   {
     newEncTreuil = EncoderObject.read();
     Input = EncoderObject.read();
@@ -52,7 +52,7 @@ void treuilUnroll(int target_nbTurns, PID &PIDObject, Encoder &EncoderObject, in
   newEncTreuil = EncoderObject.read();
   digitalWrite(PHTreuil, LOW);
 
-  while(newEncTreuil > Setpoint - 2) 
+  while(newEncTreuil < Setpoint - 2) 
   {
     newEncTreuil = EncoderObject.read();
     Input = EncoderObject.read();
