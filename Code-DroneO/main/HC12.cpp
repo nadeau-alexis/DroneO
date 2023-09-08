@@ -6,7 +6,7 @@ int checkCommunication(SoftwareSerial &HC12object, String HC12String_)
     if(HC12object.available())
     {   
         //Serial.println("available");
-        digitalWrite(22, HIGH);
+        digitalWrite(commLedPin, HIGH);
         int buffer = 50;
         char HC12message[buffer];
         char *HC12ParsedMessage;
@@ -17,16 +17,16 @@ int checkCommunication(SoftwareSerial &HC12object, String HC12String_)
             HC12String_ = HC12object.readString();
             HC12String_.toCharArray(HC12message, buffer);
             HC12ParsedMessage = strtok(HC12message,delim);
-            //HC12ParsedMessage = strtok(NULL,delim);
+            HC12ParsedMessage = strtok(NULL,delim);
         }
         
         int returnValue = 0;
-        //sscanf(HC12ParsedMessage, "%d", &returnValue);
-        returnValue = atoi(HC12ParsedMessage);
-        digitalWrite(22, LOW);
+        sscanf(HC12ParsedMessage, "%d", &returnValue);
+        //returnValue = atoi(HC12ParsedMessage);
+        digitalWrite(commLedPin, LOW);
         return returnValue;
     }
-    digitalWrite(22, LOW);
+    digitalWrite(commLedPin, LOW);
     return 0;
 }
 
